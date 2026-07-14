@@ -10,16 +10,43 @@ API_KEY = st.secrets.get("API_KEY", "deneme123")
 HEADERS = {"x-apisports-key": API_KEY}
 BASE_URL = "https://v3.football.api-sports.io"
 
+# ========== TÜM LİGLER VE TURNUVALAR (EKSİKSİZ) ==========
 LEAGUES = {
-    "İngiltere Premier": 39, "İngiltere Championship": 40,
-    "İspanya La Liga": 140, "İspanya La Liga2": 141,
-    "Almanya Bundesliga": 78, "Almanya 2. Bundesliga": 79,
-    "İtalya Serie A": 135, "İtalya Serie B": 136,
-    "Fransa Ligue 1": 61, "Fransa Ligue 2": 62,
-    "Hollanda Eredivisie": 88, "Portekiz Primeira": 94,
-    "Belçika Pro": 144, "Türkiye Süper Lig": 203, "Türkiye 1. Lig": 204,
-    "Şampiyonlar Ligi": 2, "Avrupa Ligi": 3,
-    "İngiltere FA Cup": 45, "İspanya Kral Kupası": 143, "Almanya DFB": 81
+    # Top 20 Ligler
+    "İngiltere Premier": 39,
+    "İngiltere Championship": 40,
+    "İspanya La Liga": 140,
+    "İspanya La Liga2": 141,
+    "Almanya Bundesliga": 78,
+    "Almanya 2. Bundesliga": 79,
+    "İtalya Serie A": 135,
+    "İtalya Serie B": 136,
+    "Fransa Ligue 1": 61,
+    "Fransa Ligue 2": 62,
+    "Hollanda Eredivisie": 88,
+    "Portekiz Primeira": 94,
+    "Belçika Pro League": 144,
+    "Türkiye Süper Lig": 203,
+    "Türkiye 1. Lig": 204,
+    "Rusya Premier": 235,
+    "İskoçya Premier": 179,
+    "Avusturya Bundesliga": 227,
+    "İsviçre Super": 207,
+    "Yunanistan Super": 197,
+    # Kupalar
+    "İngiltere FA Cup": 45,
+    "İspanya Kral Kupası": 143,
+    "Almanya DFB Pokal": 81,
+    "Fransa Coupe de France": 66,
+    "İtalya Coppa Italia": 137,
+    # UEFA Turnuvaları
+    "Şampiyonlar Ligi": 2,
+    "Avrupa Ligi": 3,
+    "Konferans Ligi": 848,
+    # FIFA / Milli Takım
+    "FIFA Dünya Kupası": 1,        # Sezon ID'si değişebilir
+    "EURO 2024": 4,                # Sezon ID'si değişebilir
+    "Dünya Kupası Elemeleri (UEFA)": 1
 }
 
 def get_matches(league_id, season="2025"):
@@ -43,7 +70,8 @@ def get_matches(league_id, season="2025"):
                 "date": m["fixture"]["date"][:10]
             })
         return matches
-    except:
+    except Exception as e:
+        st.error(f"Hata: {e}")
         return []
 
 def analyze_match(league_name, match_id):
