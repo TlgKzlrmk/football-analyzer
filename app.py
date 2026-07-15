@@ -107,19 +107,59 @@ with col1:
         with st.spinner("sports-skills'ten veri çekiliyor..."):
             data = get_ss_standings("premier-league-2024")
             if data:
-                st.subheader("🔑 Verideki Anahtarlar")
-                st.write(list(data.keys()))
-                
-                st.subheader("📦 İlk Katman")
-                st.json(data)
-                
-                # Eğer 'standings' varsa göster, yoksa tüm anahtarları dene
+                # 'standings' anahtarını kontrol et
                 if "standings" in data:
-                    st.success("'standings' anahtarı bulundu!")
+                    standings = data["standings"]
+                    if isinstance(standings, list) and len(standings) > 0:
+                        first = standings[0]
+                        
+                        # Hangi anahtarın içinde tablo var?
+                        entries = None
+                        if "entries" in first:
+                            entries = first["entries"]
+                        elif "table" in first:
+                            entries = first["table"]
+                        else:
+                            # Belki doğrudan listedir
+                            entries = standings
+                        
+                        if entries and isinstance(entries, list) and len(entries) > 0:
+                            # Tabloyu oluştur
+                            rows = []
+                            for item in entries:
+                                # Takım bilgisi iç içe olabilir
+                                team = item.get("team", {})
+                                if isinstance(team, dict):
+                                    team_name = team.get("name", "")
+                                else:
+                                    team_name = str(team)
+                                
+                                row = {
+                                    "Sıra": item.get("rank") or item.get("position", ""),
+                                    "Takım": team_name,
+                                    "O": item.get("played") or item.get("playedGames", ""),
+                                    "G": item.get("win") or item.get("won", ""),
+                                    "B": item.get("draw", ""),
+                                    "M": item.get("lose") or item.get("lost", ""),
+                                    "A": item.get("goalsFor") or item.get("goalsFor", ""),
+                                    "Y": item.get("goalsAgainst") or item.get("goalsAgainst", ""),
+                                    "Puan": item.get("points", ""),
+                                    "Avans": item.get("goalDifference") or item.get("goalDiff", "")
+                                }
+                                rows.append(row)
+                            
+                            df = pd.DataFrame(rows)
+                            st.dataframe(df, use_container_width=True)
+                        else:
+                            st.warning("Tablo verisi bulunamadı. Lütfen yapıyı kontrol edin.")
+                            st.json(first)  # Hata ayıklama için
+                    else:
+                        st.warning("Standings listesi boş veya beklenen formatta değil.")
                 else:
-                    st.warning("'standings' anahtarı yok. Verinin hangi anahtarları içerdiğini görmek için yukarıdaki listeye bakın.")
+                    st.warning("'standings' anahtarı bulunamadı. Tüm veri:")
+                    st.json(data)
             else:
-                st.error("Veri alınamadı.")
+                st.error("Veri alınamadı. Lütfen sezon ID'sini kontrol edin (premier-league-2024).")
 
 with col2:
     if st.button("🔎 Takım Ara (Arsenal)"):
