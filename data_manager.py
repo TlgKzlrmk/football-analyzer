@@ -6,11 +6,9 @@ import json
 import os
 from datetime import datetime, timedelta
 
-# Football-Data.org anahtarını Streamlit secrets'tan al
 API_KEY_FOOTBALL_DATA = os.environ.get("FOOTBALL_DATA_API_KEY", "683de67308df4cfcb2ef3051100bdc66")
 FOOTBALL_DATA_BASE = "https://api.football-data.org/v4"
 
-# Önbellek klasörü
 CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -68,15 +66,19 @@ def get_xg_from_understat(league, season):
 def get_fbref_team_stats(league, season):
     """
     FBref'ten takım istatistiklerini çeker.
-    league örnekleri: "ENG-Premier League", "ESP-La Liga", "GER-Bundesliga", "ITA-Serie A", "FRA-Ligue 1"
+    league: "ENG-Premier League", "ESP-La Liga", "GER-Bundesliga", "ITA-Serie A", "FRA-Ligue 1"
+    season: "2024" veya "2023" gibi
     """
     try:
         fbref = sd.FBref(league, season)
         df = fbref.read_team_season_stats(stat_type="standard")
+        if df.empty:
+            return pd.DataFrame({"Hata": ["Veri boş, sezon veya lig kodu yanlış olabilir."]})
         return df
     except Exception as e:
-        print(f"FBref hatası: {e}")
-        return pd.DataFrame()
+        error_msg = f"FBref hatası: {str(e)}"
+        print(error_msg)
+        return pd.DataFrame({"Hata": [error_msg]})
 
 def get_statsbomb_matches(competition_id, season_id):
     try:
@@ -92,7 +94,7 @@ def get_statsbomb_events(match_id):
     except Exception as e:
         return pd.DataFrame()
 
-# ==================== sports-skills ENTEGRASYONU ====================
+# ==================== sports-skills ====================
 from sports_skills import football
 
 def get_ss_standings(season_id: str):
