@@ -96,3 +96,26 @@ if st.button("📈 Takım İstatistikleri (FBref)"):
                 st.warning("FBref verisi alınamadı.")
         else:
             st.info("FBref şu anda sadece 5 büyük lig için etkindir.")
+# ============ sports-skills TEST BUTONU ============
+st.markdown("---")
+st.subheader("🧪 sports-skills Test Alanı")
+
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🏆 Premier League Puan Durumu (sports-skills)"):
+        with st.spinner("sports-skills'ten veri çekiliyor..."):
+            standings = get_ss_standings("premier-league-2025")
+            if standings:
+                df = pd.DataFrame(standings)
+                st.dataframe(df)
+            else:
+                st.error("Veri alınamadı. Lütfen sezon ID'sini kontrol edin.")
+
+with col2:
+    if st.button("🔎 Takım Ara (Arsenal)"):
+        with st.spinner("Takım profili aranıyor..."):
+            team = get_ss_team_profile("arsenal")
+            if team:
+                st.json(team)
+            else:
+                st.error("Takım bulunamadı.")
