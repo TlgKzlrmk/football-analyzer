@@ -105,32 +105,33 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("🏆 Premier League Puan Durumu (sports-skills)"):
         with st.spinner("sports-skills'ten veri çekiliyor..."):
-            standings = get_ss_standings("premier-league-2024")
-            if standings and isinstance(standings, list) and len(standings) > 0:
-                rows = []
-                for entry in standings:
-                    team = entry.get("team", {})
-                    if isinstance(team, dict):
-                        team_name = team.get("name", "")
+            data = get_ss_standings("premier-league-2024")
+            if data:
+                # Önce ham veriyi göster
+                st.subheader("Ham Veri (JSON)")
+                st.json(data)
+                
+                # Eğer standings varsa tablo dene
+                if "standings" in data:
+                    st.subheader("Tablo Denemesi")
+                    standings = data["standings"]
+                    if isinstance(standings, list) and len(standings) > 0:
+                        first = standings[0]
+                        if "entries" in first:
+                            entries = first["entries"]
+                            df = pd.DataFrame(entries)
+                            st.dataframe(df)
+                        elif "table" in first:
+                            df = pd.DataFrame(first["table"])
+                            st.dataframe(df)
+                        else:
+                            st.write("Bilinmeyen yapı:", first)
                     else:
-                        team_name = str(team)
-                    row = {
-                        "Sıra": entry.get("rank", ""),
-                        "Takım": team_name,
-                        "O": entry.get("played", ""),
-                        "G": entry.get("win", ""),
-                        "B": entry.get("draw", ""),
-                        "M": entry.get("lose", ""),
-                        "A": entry.get("goalsFor", ""),
-                        "Y": entry.get("goalsAgainst", ""),
-                        "Puan": entry.get("points", ""),
-                        "Avans": entry.get("goalDifference", "")
-                    }
-                    rows.append(row)
-                df = pd.DataFrame(rows)
-                st.dataframe(df, use_container_width=True)
+                        st.write("Standings listesi boş veya beklenen formatta değil.")
+                else:
+                    st.warning("'standings' anahtarı bulunamadı.")
             else:
-                st.warning("Henüz bu sezon için puan durumu yayınlanmamış olabilir. Lütfen başka bir sezon dene (örnek: premier-league-2024).")
+                st.error("Veri alınamadı.")
 
 with col2:
     if st.button("🔎 Takım Ara (Arsenal)"):
