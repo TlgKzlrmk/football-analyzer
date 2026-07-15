@@ -107,8 +107,28 @@ with col1:
         with st.spinner("sports-skills'ten veri çekiliyor..."):
             standings = get_ss_standings("premier-league-2024")
             if standings and isinstance(standings, list) and len(standings) > 0:
-                df = pd.DataFrame(standings)
-                st.dataframe(df)
+                rows = []
+                for entry in standings:
+                    team = entry.get("team", {})
+                    if isinstance(team, dict):
+                        team_name = team.get("name", "")
+                    else:
+                        team_name = str(team)
+                    row = {
+                        "Sıra": entry.get("rank", ""),
+                        "Takım": team_name,
+                        "O": entry.get("played", ""),
+                        "G": entry.get("win", ""),
+                        "B": entry.get("draw", ""),
+                        "M": entry.get("lose", ""),
+                        "A": entry.get("goalsFor", ""),
+                        "Y": entry.get("goalsAgainst", ""),
+                        "Puan": entry.get("points", ""),
+                        "Avans": entry.get("goalDifference", "")
+                    }
+                    rows.append(row)
+                df = pd.DataFrame(rows)
+                st.dataframe(df, use_container_width=True)
             else:
                 st.warning("Henüz bu sezon için puan durumu yayınlanmamış olabilir. Lütfen başka bir sezon dene (örnek: premier-league-2024).")
 
