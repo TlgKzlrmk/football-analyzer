@@ -107,29 +107,17 @@ with col1:
         with st.spinner("sports-skills'ten veri çekiliyor..."):
             data = get_ss_standings("premier-league-2024")
             if data:
-                # Önce ham veriyi göster
-                st.subheader("Ham Veri (JSON)")
+                st.subheader("🔑 Verideki Anahtarlar")
+                st.write(list(data.keys()))
+                
+                st.subheader("📦 İlk Katman")
                 st.json(data)
                 
-                # Eğer standings varsa tablo dene
+                # Eğer 'standings' varsa göster, yoksa tüm anahtarları dene
                 if "standings" in data:
-                    st.subheader("Tablo Denemesi")
-                    standings = data["standings"]
-                    if isinstance(standings, list) and len(standings) > 0:
-                        first = standings[0]
-                        if "entries" in first:
-                            entries = first["entries"]
-                            df = pd.DataFrame(entries)
-                            st.dataframe(df)
-                        elif "table" in first:
-                            df = pd.DataFrame(first["table"])
-                            st.dataframe(df)
-                        else:
-                            st.write("Bilinmeyen yapı:", first)
-                    else:
-                        st.write("Standings listesi boş veya beklenen formatta değil.")
+                    st.success("'standings' anahtarı bulundu!")
                 else:
-                    st.warning("'standings' anahtarı bulunamadı.")
+                    st.warning("'standings' anahtarı yok. Verinin hangi anahtarları içerdiğini görmek için yukarıdaki listeye bakın.")
             else:
                 st.error("Veri alınamadı.")
 
