@@ -77,7 +77,7 @@ if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 
             else:
                 st.warning("xG verisi alınamadı. Understat'te bu sezon verisi olmayabilir.")
 
-# FBref takım istatistikleri (opsiyonel)
+# ============ FBref TAKIM İSTATİSTİKLERİ (GÜNCELLENDİ) ============
 if st.button("📈 Takım İstatistikleri (FBref)"):
     with st.spinner("FBref'ten veri çekiliyor..."):
         fbref_league_map = {
@@ -90,11 +90,16 @@ if st.button("📈 Takım İstatistikleri (FBref)"):
         if league_name in fbref_league_map:
             df = get_fbref_team_stats(fbref_league_map[league_name], "2024")
             if not df.empty:
-                st.dataframe(df.head(20))
+                st.dataframe(df, use_container_width=True)
+                # Özet istatistikler
+                st.subheader("📊 Özet İstatistikler")
+                numeric_cols = df.select_dtypes(include=['number']).columns
+                if not numeric_cols.empty:
+                    st.dataframe(df[numeric_cols].describe(), use_container_width=True)
             else:
-                st.warning("FBref verisi alınamadı.")
+                st.warning("FBref verisi alınamadı. Lütfen sezon kontrolü yapın (2024 veya 2023 deneyin).")
         else:
-            st.info("FBref şu anda sadece 5 büyük lig için etkindir.")
+            st.info("FBref şu anda sadece 5 büyük lig için etkindir. Diğer ligler için sports-skills'i kullanabilirsiniz.")
 
 # ============ sports-skills TEST ALANI ============
 st.markdown("---")
@@ -107,27 +112,21 @@ with col1:
         with st.spinner("sports-skills'ten veri çekiliyor..."):
             data = get_ss_standings("premier-league-2024")
             if data:
-                # 'standings' anahtarını kontrol et
                 if "standings" in data:
                     standings = data["standings"]
                     if isinstance(standings, list) and len(standings) > 0:
                         first = standings[0]
-                        
-                        # Hangi anahtarın içinde tablo var?
                         entries = None
                         if "entries" in first:
                             entries = first["entries"]
                         elif "table" in first:
                             entries = first["table"]
                         else:
-                            # Belki doğrudan listedir
                             entries = standings
                         
                         if entries and isinstance(entries, list) and len(entries) > 0:
-                            # Tabloyu oluştur
                             rows = []
                             for item in entries:
-                                # Takım bilgisi iç içe olabilir
                                 team = item.get("team", {})
                                 if isinstance(team, dict):
                                     team_name = team.get("name", "")
@@ -141,8 +140,8 @@ with col1:
                                     "G": item.get("win") or item.get("won", ""),
                                     "B": item.get("draw", ""),
                                     "M": item.get("lose") or item.get("lost", ""),
-                                    "A": item.get("goalsFor") or item.get("goalsFor", ""),
-                                    "Y": item.get("goalsAgainst") or item.get("goalsAgainst", ""),
+                                    "A": item.get("goalsFor") or item.get("gf", ""),
+                                    "Y": item.get("goalsAgainst") or item.get("ga", ""),
                                     "Puan": item.get("points", ""),
                                     "Avans": item.get("goalDifference") or item.get("goalDiff", "")
                                 }
@@ -151,15 +150,15 @@ with col1:
                             df = pd.DataFrame(rows)
                             st.dataframe(df, use_container_width=True)
                         else:
-                            st.warning("Tablo verisi bulunamadı. Lütfen yapıyı kontrol edin.")
-                            st.json(first)  # Hata ayıklama için
+                            st.warning("Tablo verisi bulunamadı.")
+                            st.json(first)
                     else:
-                        st.warning("Standings listesi boş veya beklenen formatta değil.")
+                        st.warning("Standings listesi boş.")
                 else:
-                    st.warning("'standings' anahtarı bulunamadı. Tüm veri:")
+                    st.warning("'standings' anahtarı bulunamadı.")
                     st.json(data)
             else:
-                st.error("Veri alınamadı. Lütfen sezon ID'sini kontrol edin (premier-league-2024).")
+                st.error("Veri alınamadı.")
 
 with col2:
     if st.button("🔎 Takım Ara (Arsenal)"):
