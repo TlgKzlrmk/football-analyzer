@@ -65,14 +65,13 @@ def get_xg_from_understat(league, season):
 
 def get_fbref_team_stats(league, season):
     """
-    FBref verilerini sports-skills üzerinden çeker (Chrome/Cloudflare sorunu yok).
+    FBref verilerini sports-skills üzerinden çeker (Cloudflare/Chrome sorunu yok).
     league: "Premier League", "La Liga" gibi (İngilizce isim)
     season: "2024" veya "2023" gibi (başlangıç yılı)
     """
     from sports_skills import football
     import pandas as pd
     
-    # Lig ismini sports-skills formatına çevir
     league_map = {
         "Premier League": "premier-league",
         "La Liga": "la-liga",
@@ -84,7 +83,6 @@ def get_fbref_team_stats(league, season):
     season_id = f"{league_slug}-{season}"
     
     try:
-        # Takım istatistiklerini çek
         result = football.get_season_standings(season_id=season_id)
         if not result or "data" not in result:
             return pd.DataFrame({"Hata": ["Veri alınamadı"]})
@@ -98,7 +96,6 @@ def get_fbref_team_stats(league, season):
         if not entries:
             return pd.DataFrame({"Hata": ["Tablo bulunamadı"]})
         
-        # DataFrame'e çevir
         df = pd.DataFrame(entries)
         return df
     except Exception as e:
@@ -118,7 +115,7 @@ def get_statsbomb_events(match_id):
     except Exception as e:
         return pd.DataFrame()
 
-# ==================== sports-skills ====================
+# ==================== sports-skills ENTEGRASYONU ====================
 from sports_skills import football
 
 def get_ss_standings(season_id: str):
