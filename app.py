@@ -198,25 +198,36 @@ TOURNAMENTS = {
     "Ligue 1 2022-23": {"competition_id": 7, "season_id": 14},
 }
 
-# Turnuva seçimi
 selected_tournament = st.selectbox("🏆 Turnuva Seç", list(TOURNAMENTS.keys()))
 tournament_info = TOURNAMENTS[selected_tournament]
 competition_id = tournament_info["competition_id"]
 season_id = tournament_info["season_id"]
 
-# Maçları listele
 if st.button("📋 Maçları Listele"):
     with st.spinner("StatsBomb'dan maçlar çekiliyor..."):
         matches = get_statsbomb_matches(competition_id, season_id)
         if not matches.empty:
             st.success(f"{len(matches)} maç bulundu!")
-            # Maç ID'leri ve isimleri
+            
+            # Maç listesini oluştur (DOĞRU ANAHTARLARLA)
             match_options = []
             for idx, row in matches.iterrows():
-                home = row.get('home_team', {}).get('home_team_name', '?')
-                away = row.get('away_team', {}).get('away_team_name', '?')
-                match_date = row.get('match_date', '')
-                match_id = row.get('match_id', '')
+                # home_team ve away_team sütunları sözlük olabilir
+                home_team = row.get('home_team', {})
+                if isinstance(home_team, dict):
+                    home = home_team.get('name', home_team.get('team_name', str(home_team)))
+                else:
+                    home = str(home_team) if home_team else '?'
+                
+                away_team = row.get('away_team', {})
+                if isinstance(away_team, dict):
+                    away = away_team.get('name', away_team.get('team_name', str(away_team)))
+                else:
+                    away = str(away_team) if away_team else '?'
+                
+                match_date = row.get('match_date', 'Tarih yok')
+                match_id = row.get('match_id', row.get('id', ''))
+                
                 match_options.append({
                     "display": f"{home} vs {away} ({match_date})",
                     "match_id": match_id,
@@ -224,39 +235,42 @@ if st.button("📋 Maçları Listele"):
                     "away": away
                 })
             
-            # Maç seçimi için dropdown
-            selected_match_label = st.selectbox(
-                "📅 Maç Seç",
-                options=[m["display"] for m in match_options]
-            )
-            selected_match = next(m for m in match_options if m["display"] == selected_match_label)
-            match_id = selected_match["match_id"]
-            
-            # Olayları göster
-            if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster"):
-                with st.spinner("Olaylar çekiliyor..."):
-                    events = get_statsbomb_events(match_id)
-                    if not events.empty:
-                        st.success(f"{len(events)} olay bulundu!")
-                        # Olay türlerini filtreleme seçeneği
-                        event_types = events['type'].unique().tolist()
-                        selected_types = st.multiselect(
-                            "🔍 Olay Türlerini Filtrele",
-                            options=event_types,
-                            default=event_types[:5]
-                        )
-                        if selected_types:
-                            filtered_events = events[events['type'].isin(selected_types)]
-                            st.dataframe(filtered_events, use_container_width=True)
+            if match_options:
+                selected_match_label = st.selectbox(
+                    "📅 Maç Seç",
+                    options=[m["display"] for m in match_options]
+                )
+                selected_match = next(m for m in match_options if m["display"] == selected_match_label)
+                match_id = selected_match["match_id"]
+                
+                if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster"):
+                    with st.spinner("Olaylar çekiliyor..."):
+                        events = get_statsbomb_events(match_id)
+                        if not events.empty:
+                            st.success(f"{len(events)} olay bulundu!")
+                            
+                            # Olay türleri
+                            event_types = events['type'].unique().tolist()
+                            selected_types = st.multiselect(
+                                "🔍 Olay Türlerini Filtrele",
+                                options=event_types,
+                                default=event_types[:5] if len(event_types) >= 5 else event_types
+                            )
+                            
+                            if selected_types:
+                                filtered_events = events[events['type'].isin(selected_types)]
+                                st.dataframe(filtered_events, use_container_width=True)
+                            else:
+                                st.dataframe(events, use_container_width=True)
+                            
+                            # Özet
+                            st.subheader("📊 Olay Özeti")
+                            summary = events['type'].value_counts().reset_index()
+                            summary.columns = ['Olay Türü', 'Sayı']
+                            st.dataframe(summary, use_container_width=True)
                         else:
-                            st.dataframe(events, use_container_width=True)
-                        
-                        # Özet istatistikler
-                        st.subheader("📊 Olay Özeti")
-                        summary = events['type'].value_counts().reset_index()
-                        summary.columns = ['Olay Türü', 'Sayı']
-                        st.dataframe(summary, use_container_width=True)
-                    else:
-                        st.warning("Bu maç için olay verisi bulunamadı.")
+                            st.warning("Bu maç için olay verisi bulunamadı.")
+            else:
+                st.warning("Hiç maç bulunamadı. Farklı bir turnuva deneyin.")
         else:
-            st.error("Maç listesi alınamadı. Turnuva ID'lerini kontrol edin.")
+            st.error("Maç listesi alınamadı. Turnuva ID'lerini veya internet bağlantınızı kontrol edin.")
