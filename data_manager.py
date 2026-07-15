@@ -66,11 +66,16 @@ def get_xg_from_understat(league, season):
         return pd.DataFrame()
 
 def get_fbref_team_stats(league, season):
+    """
+    FBref'ten takım istatistiklerini çeker.
+    league örnekleri: "ENG-Premier League", "ESP-La Liga", "GER-Bundesliga", "ITA-Serie A", "FRA-Ligue 1"
+    """
     try:
         fbref = sd.FBref(league, season)
         df = fbref.read_team_season_stats(stat_type="standard")
         return df
     except Exception as e:
+        print(f"FBref hatası: {e}")
         return pd.DataFrame()
 
 def get_statsbomb_matches(competition_id, season_id):
@@ -91,14 +96,11 @@ def get_statsbomb_events(match_id):
 from sports_skills import football
 
 def get_ss_standings(season_id: str):
-    """
-    sports-skills ile puan durumu çeker ve ham veriyi döndürür.
-    """
     try:
         result = football.get_season_standings(season_id=season_id)
         if not result or "data" not in result:
             return None
-        return result["data"]  # Tüm veriyi döndür
+        return result["data"]
     except Exception as e:
         print(f"sports-skills puan durumu hatası: {e}")
         return None
