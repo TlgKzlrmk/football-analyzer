@@ -79,11 +79,26 @@ if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 
 # ============ FBref TAKIM İSTATİSTİKLERİ (sports-skills ile) ============
 if st.button("📈 Takım İstatistikleri (FBref)"):
     with st.spinner("Veri çekiliyor (sports-skills üzerinden)..."):
-        # Önce 2024 dene, olmazsa 2023
         for season in ["2024", "2023"]:
             df = get_fbref_team_stats(league_name, season)
             if not df.empty and "Hata" not in df.columns:
                 st.success(f"{season} sezonu verisi başarıyla çekildi!")
+                
+                # team sütununu düzelt (iç içe JSON'dan takım adını çıkar)
+                if "team" in df.columns:
+                    # team sütunundaki dict'ten 'name' alanını çıkar
+                    df["team_name"] = df["team"].apply(
+                        lambda x: x.get("name", str(x)) if isinstance(x, dict) else str(x)
+                    )
+                    # sütun sıralamasını düzenle
+                    cols = ["position", "team_name", "played", "won", "drawn", "lost", 
+                            "goals_for", "goals_against", "goal_difference", "points"]
+                    df = df[[c for c in cols if c in df.columns]]
+                    df.columns = ["Sıra", "Takım", "O", "G", "B", "M", "A", "Y", "Avans", "Puan"]
+                else:
+                    # team yoksa sadece sütun isimlerini Türkçeleştir
+                    df.columns = [col.replace("_", " ").title() for col in df.columns]
+                
                 st.dataframe(df, use_container_width=True)
                 break
             else:
