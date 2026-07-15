@@ -58,7 +58,7 @@ if st.button("📊 Puan Durumunu Göster"):
                 st.warning("Standings verisi boş.")
         else:
             st.error("Puan durumu alınamadı. API anahtarını veya lig kodunu kontrol edin.")
-            st.json(table)  # Hata detayını göster
+            st.json(table)
 
 # Understat xG (sadece 5 büyük lig)
 if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
@@ -80,7 +80,6 @@ if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 
 # FBref takım istatistikleri (opsiyonel)
 if st.button("📈 Takım İstatistikleri (FBref)"):
     with st.spinner("FBref'ten veri çekiliyor..."):
-        # league_name'i FBref formatına çevir (örnek: "Premier League" -> "ENG-Premier League")
         fbref_league_map = {
             "Premier League": "ENG-Premier League",
             "La Liga": "ESP-La Liga",
@@ -96,29 +95,28 @@ if st.button("📈 Takım İstatistikleri (FBref)"):
                 st.warning("FBref verisi alınamadı.")
         else:
             st.info("FBref şu anda sadece 5 büyük lig için etkindir.")
-# ============ sports-skills TEST BUTONU ============
+
+# ============ sports-skills TEST ALANI ============
 st.markdown("---")
 st.subheader("🧪 sports-skills Test Alanı")
 
 col1, col2 = st.columns(2)
+
 with col1:
     if st.button("🏆 Premier League Puan Durumu (sports-skills)"):
         with st.spinner("sports-skills'ten veri çekiliyor..."):
-            standings = get_ss_standings("premier-league-2025")
-            if standings:
+            standings = get_ss_standings("premier-league-2024")
+            if standings and isinstance(standings, list) and len(standings) > 0:
                 df = pd.DataFrame(standings)
                 st.dataframe(df)
             else:
-                st.error("Veri alınamadı. Lütfen sezon ID'sini kontrol edin.")
+                st.warning("Henüz bu sezon için puan durumu yayınlanmamış olabilir. Lütfen başka bir sezon dene (örnek: premier-league-2024).")
 
 with col2:
-if st.button("🏆 Premier League Puan Durumu (sports-skills)"):
-    with st.spinner("sports-skills'ten veri çekiliyor..."):
-        standings = get_ss_standings("premier-league-2025")
-        if standings and isinstance(standings, list) and len(standings) > 0:
-            # Veriyi DataFrame'e çevir
-            df = pd.DataFrame(standings)
-            # Sütunları düzenle (varsayılan sütun adlarıyla)
-            st.dataframe(df)
-        else:
-            st.warning("Henüz bu sezon için puan durumu yayınlanmamış olabilir. Lütfen başka bir sezon dene (örnek: premier-league-2024).")
+    if st.button("🔎 Takım Ara (Arsenal)"):
+        with st.spinner("Takım profili aranıyor..."):
+            team = get_ss_team_profile("arsenal")
+            if team:
+                st.json(team)
+            else:
+                st.error("Takım bulunamadı.")
