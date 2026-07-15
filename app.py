@@ -9,7 +9,6 @@ st.set_page_config(page_title="Pro Football AI", layout="wide")
 st.title("⚽ Pro Seviye AI Futbol Analiz")
 st.markdown("### Top 30 Lig, 2. Ligler, Kupalar, UEFA & FIFA")
 
-# Football-Data.org lig kodları
 LEAGUE_CODES = {
     "Premier League": "PL",
     "La Liga": "PD",
@@ -60,7 +59,7 @@ if st.button("📊 Puan Durumunu Göster"):
             st.error("Puan durumu alınamadı. API anahtarını veya lig kodunu kontrol edin.")
             st.json(table)
 
-# Understat xG (sadece 5 büyük lig)
+# Understat xG
 if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
     understat_mapping = {
         "Premier League": "EPL",
@@ -77,7 +76,7 @@ if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 
             else:
                 st.warning("xG verisi alınamadı. Understat'te bu sezon verisi olmayabilir.")
 
-# ============ FBref TAKIM İSTATİSTİKLERİ (GÜNCELLENDİ) ============
+# ============ FBref (Hata gösterimi eklendi) ============
 if st.button("📈 Takım İstatistikleri (FBref)"):
     with st.spinner("FBref'ten veri çekiliyor..."):
         fbref_league_map = {
@@ -88,20 +87,29 @@ if st.button("📈 Takım İstatistikleri (FBref)"):
             "Ligue 1": "FRA-Ligue 1"
         }
         if league_name in fbref_league_map:
-            df = get_fbref_team_stats(fbref_league_map[league_name], "2024")
-            if not df.empty:
-                st.dataframe(df, use_container_width=True)
-                # Özet istatistikler
-                st.subheader("📊 Özet İstatistikler")
-                numeric_cols = df.select_dtypes(include=['number']).columns
-                if not numeric_cols.empty:
-                    st.dataframe(df[numeric_cols].describe(), use_container_width=True)
+            # Önce 2024 dene, olmazsa 2023
+            for season in ["2024", "2023"]:
+                df = get_fbref_team_stats(fbref_league_map[league_name], season)
+                if not df.empty and "Hata" not in df.columns:
+                    st.success(f"{season} sezonu verisi başarıyla çekildi!")
+                    st.dataframe(df, use_container_width=True)
+                    # Özet
+                    numeric_cols = df.select_dtypes(include=['number']).columns
+                    if not numeric_cols.empty:
+                        st.subheader("📊 Özet İstatistikler")
+                        st.dataframe(df[numeric_cols].describe(), use_container_width=True)
+                    break
+                else:
+                    if not df.empty and "Hata" in df.columns:
+                        st.error(df["Hata"].iloc[0])
+                    else:
+                        st.warning(f"{season} sezonu için veri alınamadı. Deneniyor...")
             else:
-                st.warning("FBref verisi alınamadı. Lütfen sezon kontrolü yapın (2024 veya 2023 deneyin).")
+                st.error("FBref'ten hiçbir sezon için veri alınamadı. Lütfen daha sonra tekrar deneyin.")
         else:
             st.info("FBref şu anda sadece 5 büyük lig için etkindir. Diğer ligler için sports-skills'i kullanabilirsiniz.")
 
-# ============ sports-skills TEST ALANI ============
+# ============ sports-skills Test Alanı ============
 st.markdown("---")
 st.subheader("🧪 sports-skills Test Alanı")
 
