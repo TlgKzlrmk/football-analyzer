@@ -1,158 +1,64 @@
 import streamlit as st
-import requests
-import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from mplsoccer import Pitch
-from datetime import datetime, timedelta
-import os
-
-API_KEY = st.secrets.get("API_KEY", "deneme123")
-HEADERS = {"x-apisports-key": API_KEY}
-BASE_URL = "https://v3.football.api-sports.io"
-
-# ========== TÜM LİGLER VE TURNUVALAR (EKSİKSİZ) ==========
-LEAGUES = {
-    # Top 20 Ligler
-    "İngiltere Premier": 39,
-    "İngiltere Championship": 40,
-    "İspanya La Liga": 140,
-    "İspanya La Liga2": 141,
-    "Almanya Bundesliga": 78,
-    "Almanya 2. Bundesliga": 79,
-    "İtalya Serie A": 135,
-    "İtalya Serie B": 136,
-    "Fransa Ligue 1": 61,
-    "Fransa Ligue 2": 62,
-    "Hollanda Eredivisie": 88,
-    "Portekiz Primeira": 94,
-    "Belçika Pro League": 144,
-    "Türkiye Süper Lig": 203,
-    "Türkiye 1. Lig": 204,
-    "Rusya Premier": 235,
-    "İskoçya Premier": 179,
-    "Avusturya Bundesliga": 227,
-    "İsviçre Super": 207,
-    "Yunanistan Super": 197,
-    # Kupalar
-    "İngiltere FA Cup": 45,
-    "İspanya Kral Kupası": 143,
-    "Almanya DFB Pokal": 81,
-    "Fransa Coupe de France": 66,
-    "İtalya Coppa Italia": 137,
-    # UEFA Turnuvaları
-    "Şampiyonlar Ligi": 2,
-    "Avrupa Ligi": 3,
-    "Konferans Ligi": 848,
-    # FIFA / Milli Takım
-    "FIFA Dünya Kupası": 1,        # Sezon ID'si değişebilir
-    "EURO 2024": 4,                # Sezon ID'si değişebilir
-    "Dünya Kupası Elemeleri (UEFA)": 1
-}
-
-def get_matches(league_id, season="2025"):
-    today = datetime.now().strftime("%Y-%m-%d")
-    url = f"{BASE_URL}/fixtures"
-    params = {"league": league_id, "season": season, "date": today}
-    try:
-        resp = requests.get(url, headers=HEADERS, params=params, timeout=10)
-        data = resp.json()
-        if not data["response"]:
-            tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-            params["date"] = tomorrow
-            resp = requests.get(url, headers=HEADERS, params=params, timeout=10)
-            data = resp.json()
-        matches = []
-        for m in data["response"]:
-            matches.append({
-                "id": m["fixture"]["id"],
-                "home": m["teams"]["home"]["name"],
-                "away": m["teams"]["away"]["name"],
-                "date": m["fixture"]["date"][:10]
-            })
-        return matches
-    except Exception as e:
-        st.error(f"Hata: {e}")
-        return []
-
-def analyze_match(league_name, match_id):
-    if not match_id:
-        return None, "Lütfen maç seçin!", None
-    league_id = LEAGUES.get(league_name)
-    if not league_id:
-        return None, "Lig bulunamadı!", None
-    matches = get_matches(league_id)
-    match = next((m for m in matches if str(m["id"]) == match_id), None)
-    if not match:
-        return None, "Maç bulunamadı!", None
-    home, away = match["home"], match["away"]
-    
-    url = f"{BASE_URL}/fixtures/statistics"
-    resp = requests.get(url, headers=HEADERS, params={"fixture": match_id}, timeout=10)
-    stats = resp.json()
-    home_stats = {}
-    away_stats = {}
-    if stats.get("response"):
-        for team_data in stats["response"]:
-            if team_data["team"]["name"] == home:
-                for s in team_data["statistics"]:
-                    home_stats[s["type"]] = s["value"]
-            else:
-                for s in team_data["statistics"]:
-                    away_stats[s["type"]] = s["value"]
-    
-    def calc_xg(st):
-        try:
-            shots = float(st.get("Total Shots", 0))
-            on_target = float(st.get("Shots on Goal", 0))
-            return round((on_target / (shots + 1)) * 1.2 + (shots / 15), 2) if shots > 0 else 0.0
-        except:
-            return 0.0
-    
-    home_xg = calc_xg(home_stats)
-    away_xg = calc_xg(away_stats)
-    
-    pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
-    fig, ax = pitch.draw(figsize=(10, 7))
-    np.random.seed(int(match_id) % 100)
-    for _ in range(np.random.randint(5, 12)):
-        x = np.random.uniform(50, 105)
-        y = np.random.uniform(20, 80)
-        color = 'red' if np.random.rand() > 0.85 else 'blue'
-        ax.scatter(x, y, s=150, color=color, alpha=0.7, edgecolors='white')
-    ax.set_title(f"🎯 {home} {home_xg} - {away_xg} {away}", color='white', fontsize=14)
-    
-    report = f"""
-**📊 MAÇ RAPORU - {home} vs {away}**
-- ⚽ xG: {home} {home_xg} - {away_xg} {away}
-- 🏃 Topa Sahip Olma: {home_stats.get('Ball Possession', '?')} - {away_stats.get('Ball Possession', '?')}
-- 🎯 İsabetli Şut: {home_stats.get('Shots on Goal', '?')} - {away_stats.get('Shots on Goal', '?')}
-    """
-    return fig, report, None
+from data_manager import *
 
 st.set_page_config(page_title="Pro Football AI", layout="wide")
 st.title("⚽ Pro Seviye AI Futbol Analiz")
-st.markdown("### Top 20 Lig, 2. Ligler, Kupalar, UEFA & FIFA")
+st.markdown("### Top 30 Lig, 2. Ligler, Kupalar, UEFA & FIFA")
 
-col1, col2 = st.columns(2)
-with col1:
-    league_name = st.selectbox("🏆 Lig/Turnuva Seç", list(LEAGUES.keys()))
-with col2:
-    matches = get_matches(LEAGUES[league_name])
-    if matches:
-        match_options = {f"{m['home']} vs {m['away']} ({m['date']})": str(m['id']) for m in matches}
-        selected_match_label = st.selectbox("📅 Maç Seç", list(match_options.keys()))
-        match_id = match_options[selected_match_label]
+# Football-Data.org lig kodları (kendi API dokümantasyonundan kontrol et)
+LEAGUE_CODES = {
+    "Premier League": "PL",
+    "La Liga": "PD",
+    "Bundesliga": "BL1",
+    "Serie A": "SA",
+    "Ligue 1": "FL1",
+    "Şampiyonlar Ligi": "CL",
+    "Dünya Kupası": "WC",
+    "Avrupa Ligi": "EL",
+    # ... daha fazlasını ekleyebilirsin
+}
+
+# Kullanıcı lig seçer
+league_name = st.selectbox("🏆 Lig/Turnuva Seç", list(LEAGUE_CODES.keys()))
+league_code = LEAGUE_CODES[league_name]
+
+# Puan durumunu göster
+if st.button("📊 Puan Durumunu Göster"):
+    table = get_league_table(league_code)
+    if "error" not in table:
+        standings = table.get("standings", [])
+        if standings:
+            rows = standings[0].get("table", [])
+            df = pd.DataFrame([{
+                "Sıra": r["position"],
+                "Takım": r["team"]["name"],
+                "O": r["playedGames"],
+                "G": r["won"],
+                "B": r["draw"],
+                "M": r["lost"],
+                "A": r["goalsFor"],
+                "Y": r["goalsAgainst"],
+                "Puan": r["points"]
+            } for r in rows])
+            st.dataframe(df, use_container_width=True)
     else:
-        st.warning("Bugün/yarın maç yok")
-        match_id = None
+        st.error("Puan durumu alınamadı.")
 
-if st.button("🚀 Analiz Et", type="primary"):
-    if match_id:
-        fig, report, error = analyze_match(league_name, match_id)
-        if error:
-            st.error(error)
+# xG verileri (Understat) - sadece 5 büyük lig için
+if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
+    understat_mapping = {
+        "Premier League": "EPL",
+        "La Liga": "La_liga",
+        "Bundesliga": "Bundesliga",
+        "Serie A": "Serie_A",
+        "Ligue 1": "Ligue_1"
+    }
+    if st.button("⚡ xG/xA Verileri (Understat)"):
+        xg_df = get_xg_from_understat(understat_mapping[league_name], "2024")
+        if not xg_df.empty:
+            st.dataframe(xg_df.head(20))
         else:
-            st.markdown(report)
-            st.pyplot(fig)
-    else:
-        st.warning("Lütfen bir maç seçin.")
+            st.warning("xG verisi alınamadı.")
