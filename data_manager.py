@@ -104,3 +104,65 @@ def get_statsbomb_events(match_id):
         return events
     except Exception as e:
         return pd.DataFrame()
+# ==================== sports-skills ENTEGRASYONU ====================
+from sports_skills import football
+
+def get_ss_standings(season_id: str):
+    """
+    sports-skills ile puan durumu çeker.
+    season_id örnekleri: "premier-league-2025", "la-liga-2025", "bundesliga-2025"
+    """
+    try:
+        result = football.get_season_standings(season_id=season_id)
+        if result and "data" in result and "standings" in result["data"]:
+            return result["data"]["standings"]
+        else:
+            return None
+    except Exception as e:
+        print(f"sports-skills puan durumu hatası: {e}")
+        return None
+
+def get_ss_team_profile(team_id: str):
+    """
+    sports-skills ile takım profili çeker.
+    team_id örnekleri: "arsenal", "real-madrid", "bayern-munich"
+    """
+    try:
+        result = football.get_team_profile(team_id=team_id)
+        if result and "data" in result:
+            return result["data"]
+        else:
+            return None
+    except Exception as e:
+        print(f"sports-skills takım profili hatası: {e}")
+        return None
+
+def get_ss_player_market_value(tm_player_id: str):
+    """
+    sports-skills / Transfermarkt ile oyuncu piyasa değerini çeker.
+    tm_player_id: Transfermarkt'taki oyuncu ID'si (örn: "1891" = Messi)
+    """
+    try:
+        result = football.get_player_market_value(tm_player_id=tm_player_id)
+        if result and "data" in result:
+            return result["data"]
+        else:
+            return None
+    except Exception as e:
+        print(f"Transfermarkt hatası: {e}")
+        return None
+
+def get_ss_player_stats(player_id: str):
+    """
+    sports-skills ile oyuncu sezon istatistiklerini çeker.
+    player_id: sports-skills'in kendi ID'si (örn: "premier-league-2025-arsenal-bukayo-saka")
+    """
+    try:
+        result = football.get_player_stats(player_id=player_id)
+        if result and "data" in result:
+            return result["data"]
+        else:
+            return None
+    except Exception as e:
+        print(f"sports-skills oyuncu istatistikleri hatası: {e}")
+        return None
