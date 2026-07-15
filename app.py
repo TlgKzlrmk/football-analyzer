@@ -181,18 +181,21 @@ with col2:
 st.markdown("---")
 st.subheader("⚽ StatsBomb Olay Bazlı Veri (Açık Veri)")
 
-# StatsBomb turnuva listesi (competition_id, season_id, isim)
-# Daha fazlasını https://github.com/statsbomb/open-data üzerinden bulabilirsin
+# StatsBomb turnuva listesi (GÜNCELLENMİŞ ID'LER)
 TOURNAMENTS = {
-    "FIFA Dünya Kupası 2022": {"competition_id": 1, "season_id": 27},
-    "UEFA Şampiyonlar Ligi 2021-22": {"competition_id": 9, "season_id": 27},
-    "UEFA Avrupa Ligi 2021-22": {"competition_id": 10, "season_id": 27},
-    "La Liga 2021-22": {"competition_id": 11, "season_id": 27},
-    "Premier League 2021-22": {"competition_id": 12, "season_id": 27},
-    "FA Cup 2021-22": {"competition_id": 13, "season_id": 27},
-    "Copa del Rey 2021-22": {"competition_id": 14, "season_id": 27},
-    "DFB-Pokal 2021-22": {"competition_id": 15, "season_id": 27},
-    "Women's Euro 2022": {"competition_id": 16, "season_id": 27},
+    "FIFA Dünya Kupası 2022": {"competition_id": 43, "season_id": 106},
+    "UEFA Şampiyonlar Ligi 2021-22": {"competition_id": 16, "season_id": 4},
+    "UEFA Şampiyonlar Ligi 2022-23": {"competition_id": 16, "season_id": 14},
+    "Premier League 2021-22": {"competition_id": 2, "season_id": 4},
+    "Premier League 2022-23": {"competition_id": 2, "season_id": 14},
+    "La Liga 2021-22": {"competition_id": 11, "season_id": 4},
+    "La Liga 2022-23": {"competition_id": 11, "season_id": 14},
+    "Bundesliga 2021-22": {"competition_id": 9, "season_id": 4},
+    "Bundesliga 2022-23": {"competition_id": 9, "season_id": 14},
+    "Serie A 2021-22": {"competition_id": 23, "season_id": 4},
+    "Serie A 2022-23": {"competition_id": 23, "season_id": 14},
+    "Ligue 1 2021-22": {"competition_id": 7, "season_id": 4},
+    "Ligue 1 2022-23": {"competition_id": 7, "season_id": 14},
 }
 
 # Turnuva seçimi
