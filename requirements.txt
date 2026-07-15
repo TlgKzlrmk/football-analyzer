@@ -10,3 +10,4 @@ soccerdata
 statsbombpy
 beautifulsoup4
 lxml
+sports-skills
