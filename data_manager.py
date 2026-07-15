@@ -65,12 +65,12 @@ def get_xg_from_understat(league, season):
 
 def get_fbref_team_stats(league, season):
     """
-    FBref'ten takım istatistiklerini pd.read_html ile çeker (Chrome gerekmez).
+    FBref'ten takım istatistiklerini cloudscraper ile çeker (Cloudflare aşar).
     league: "Premier League", "La Liga" gibi (İngilizce isim)
     season: "2024-2025" veya "2023-2024" formatında
     """
     import pandas as pd
-    import requests
+    import cloudscraper
     
     # FBref URL formatı
     league_slug = {
@@ -84,8 +84,8 @@ def get_fbref_team_stats(league, season):
     url = f"https://fbref.com/en/comps/{season}/{league_slug}-Stats"
     
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        resp = requests.get(url, headers=headers, timeout=15)
+        scraper = cloudscraper.create_scraper()
+        resp = scraper.get(url, timeout=15)
         resp.raise_for_status()
         
         # Tabloları çek
