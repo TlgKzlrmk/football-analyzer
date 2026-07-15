@@ -109,60 +109,32 @@ from sports_skills import football
 
 def get_ss_standings(season_id: str):
     """
-    sports-skills ile puan durumu çeker.
-    season_id örnekleri: "premier-league-2025", "la-liga-2025", "bundesliga-2025"
+    sports-skills ile puan durumu çeker ve düzgün bir liste döndürür.
     """
     try:
         result = football.get_season_standings(season_id=season_id)
-        if result and "data" in result and "standings" in result["data"]:
-            return result["data"]["standings"]
+        if not result or "data" not in result:
+            return None
+        
+        standings_data = result["data"].get("standings", [])
+        if not standings_data:
+            return None
+        
+        # standings_data genellikle bir liste içinde sözlükler barındırır.
+        # Örnek: [{"rank":1, "team":"Arsenal", "played":10, ...}, ...]
+        # Eğer iç içe geçmişse, doğru katmana inmek gerekir.
+        # Çoğu durumda standings_data[0] ana tabloyu içerir.
+        if isinstance(standings_data, list) and len(standings_data) > 0:
+            # Eğer ilk eleman 'table' veya 'standings' anahtarına sahipse içine gir.
+            if isinstance(standings_data[0], dict) and "table" in standings_data[0]:
+                return standings_data[0]["table"]
+            elif isinstance(standings_data[0], dict) and "standings" in standings_data[0]:
+                return standings_data[0]["standings"]
+            else:
+                # Doğrudan liste halindeyse
+                return standings_data
         else:
             return None
     except Exception as e:
         print(f"sports-skills puan durumu hatası: {e}")
-        return None
-
-def get_ss_team_profile(team_id: str):
-    """
-    sports-skills ile takım profili çeker.
-    team_id örnekleri: "arsenal", "real-madrid", "bayern-munich"
-    """
-    try:
-        result = football.get_team_profile(team_id=team_id)
-        if result and "data" in result:
-            return result["data"]
-        else:
-            return None
-    except Exception as e:
-        print(f"sports-skills takım profili hatası: {e}")
-        return None
-
-def get_ss_player_market_value(tm_player_id: str):
-    """
-    sports-skills / Transfermarkt ile oyuncu piyasa değerini çeker.
-    tm_player_id: Transfermarkt'taki oyuncu ID'si (örn: "1891" = Messi)
-    """
-    try:
-        result = football.get_player_market_value(tm_player_id=tm_player_id)
-        if result and "data" in result:
-            return result["data"]
-        else:
-            return None
-    except Exception as e:
-        print(f"Transfermarkt hatası: {e}")
-        return None
-
-def get_ss_player_stats(player_id: str):
-    """
-    sports-skills ile oyuncu sezon istatistiklerini çeker.
-    player_id: sports-skills'in kendi ID'si (örn: "premier-league-2025-arsenal-bukayo-saka")
-    """
-    try:
-        result = football.get_player_stats(player_id=player_id)
-        if result and "data" in result:
-            return result["data"]
-        else:
-            return None
-    except Exception as e:
-        print(f"sports-skills oyuncu istatistikleri hatası: {e}")
         return None
