@@ -65,38 +65,44 @@ def get_xg_from_understat(league, season):
 
 def get_fbref_team_stats(league, season):
     """
-    FBref'ten takım istatistiklerini cloudscraper ile çeker (Cloudflare aşar).
+    FBref verilerini sports-skills üzerinden çeker (Chrome/Cloudflare sorunu yok).
     league: "Premier League", "La Liga" gibi (İngilizce isim)
-    season: "2024-2025" veya "2023-2024" formatında
+    season: "2024" veya "2023" gibi (başlangıç yılı)
     """
+    from sports_skills import football
     import pandas as pd
-    import cloudscraper
     
-    # FBref URL formatı
-    league_slug = {
-        "Premier League": "Premier-League",
-        "La Liga": "La-Liga",
-        "Bundesliga": "Bundesliga",
-        "Serie A": "Serie-A",
-        "Ligue 1": "Ligue-1"
-    }.get(league, league.replace(" ", "-"))
-    
-    url = f"https://fbref.com/en/comps/{season}/{league_slug}-Stats"
+    # Lig ismini sports-skills formatına çevir
+    league_map = {
+        "Premier League": "premier-league",
+        "La Liga": "la-liga",
+        "Bundesliga": "bundesliga",
+        "Serie A": "serie-a",
+        "Ligue 1": "ligue-1"
+    }
+    league_slug = league_map.get(league, league.lower().replace(" ", "-"))
+    season_id = f"{league_slug}-{season}"
     
     try:
-        scraper = cloudscraper.create_scraper()
-        resp = scraper.get(url, timeout=15)
-        resp.raise_for_status()
+        # Takım istatistiklerini çek
+        result = football.get_season_standings(season_id=season_id)
+        if not result or "data" not in result:
+            return pd.DataFrame({"Hata": ["Veri alınamadı"]})
         
-        # Tabloları çek
-        tables = pd.read_html(resp.text)
-        if tables:
-            df = tables[0]  # İlk tablo genelde takım istatistikleridir
-            return df
-        else:
+        standings = result["data"].get("standings", [])
+        if not standings:
+            return pd.DataFrame({"Hata": ["Standings boş"]})
+        
+        first = standings[0]
+        entries = first.get("entries", first.get("table", []))
+        if not entries:
             return pd.DataFrame({"Hata": ["Tablo bulunamadı"]})
+        
+        # DataFrame'e çevir
+        df = pd.DataFrame(entries)
+        return df
     except Exception as e:
-        return pd.DataFrame({"Hata": [f"FBref çekme hatası: {str(e)}"]})
+        return pd.DataFrame({"Hata": [f"sports-skills hatası: {str(e)}"]})
 
 def get_statsbomb_matches(competition_id, season_id):
     try:
