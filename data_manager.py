@@ -65,20 +65,38 @@ def get_xg_from_understat(league, season):
 
 def get_fbref_team_stats(league, season):
     """
-    FBref'ten takım istatistiklerini çeker.
-    league: "ENG-Premier League", "ESP-La Liga", "GER-Bundesliga", "ITA-Serie A", "FRA-Ligue 1"
-    season: "2024" veya "2023" gibi
+    FBref'ten takım istatistiklerini pd.read_html ile çeker (Chrome gerekmez).
+    league: "Premier League", "La Liga" gibi (İngilizce isim)
+    season: "2024-2025" veya "2023-2024" formatında
     """
+    import pandas as pd
+    import requests
+    
+    # FBref URL formatı
+    league_slug = {
+        "Premier League": "Premier-League",
+        "La Liga": "La-Liga",
+        "Bundesliga": "Bundesliga",
+        "Serie A": "Serie-A",
+        "Ligue 1": "Ligue-1"
+    }.get(league, league.replace(" ", "-"))
+    
+    url = f"https://fbref.com/en/comps/{season}/{league_slug}-Stats"
+    
     try:
-        fbref = sd.FBref(league, season)
-        df = fbref.read_team_season_stats(stat_type="standard")
-        if df.empty:
-            return pd.DataFrame({"Hata": ["Veri boş, sezon veya lig kodu yanlış olabilir."]})
-        return df
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        resp = requests.get(url, headers=headers, timeout=15)
+        resp.raise_for_status()
+        
+        # Tabloları çek
+        tables = pd.read_html(resp.text)
+        if tables:
+            df = tables[0]  # İlk tablo genelde takım istatistikleridir
+            return df
+        else:
+            return pd.DataFrame({"Hata": ["Tablo bulunamadı"]})
     except Exception as e:
-        error_msg = f"FBref hatası: {str(e)}"
-        print(error_msg)
-        return pd.DataFrame({"Hata": [error_msg]})
+        return pd.DataFrame({"Hata": [f"FBref çekme hatası: {str(e)}"]})
 
 def get_statsbomb_matches(competition_id, season_id):
     try:
