@@ -92,29 +92,13 @@ from sports_skills import football
 
 def get_ss_standings(season_id: str):
     """
-    sports-skills ile puan durumu çeker ve düzgün bir liste döndürür.
+    sports-skills ile puan durumu çeker ve ham veriyi döndürür.
     """
     try:
         result = football.get_season_standings(season_id=season_id)
         if not result or "data" not in result:
             return None
-        
-        standings_data = result["data"].get("standings", [])
-        if not standings_data:
-            return None
-        
-        if isinstance(standings_data, list) and len(standings_data) > 0:
-            first = standings_data[0]
-            if isinstance(first, dict) and "entries" in first:
-                return first["entries"]
-            elif isinstance(first, dict) and "table" in first:
-                return first["table"]
-            elif isinstance(first, dict) and "standings" in first:
-                return first["standings"]
-            else:
-                return standings_data
-        else:
-            return None
+        return result["data"]  # Tüm veriyi döndür
     except Exception as e:
         print(f"sports-skills puan durumu hatası: {e}")
         return None
