@@ -176,3 +176,84 @@ with col2:
                 st.json(team)
             else:
                 st.error("Takım bulunamadı.")
+
+# ==================== StatsBomb OLAY BAZLI VERİ ====================
+st.markdown("---")
+st.subheader("⚽ StatsBomb Olay Bazlı Veri (Açık Veri)")
+
+# StatsBomb turnuva listesi (competition_id, season_id, isim)
+# Daha fazlasını https://github.com/statsbomb/open-data üzerinden bulabilirsin
+TOURNAMENTS = {
+    "FIFA Dünya Kupası 2022": {"competition_id": 1, "season_id": 27},
+    "UEFA Şampiyonlar Ligi 2021-22": {"competition_id": 9, "season_id": 27},
+    "UEFA Avrupa Ligi 2021-22": {"competition_id": 10, "season_id": 27},
+    "La Liga 2021-22": {"competition_id": 11, "season_id": 27},
+    "Premier League 2021-22": {"competition_id": 12, "season_id": 27},
+    "FA Cup 2021-22": {"competition_id": 13, "season_id": 27},
+    "Copa del Rey 2021-22": {"competition_id": 14, "season_id": 27},
+    "DFB-Pokal 2021-22": {"competition_id": 15, "season_id": 27},
+    "Women's Euro 2022": {"competition_id": 16, "season_id": 27},
+}
+
+# Turnuva seçimi
+selected_tournament = st.selectbox("🏆 Turnuva Seç", list(TOURNAMENTS.keys()))
+tournament_info = TOURNAMENTS[selected_tournament]
+competition_id = tournament_info["competition_id"]
+season_id = tournament_info["season_id"]
+
+# Maçları listele
+if st.button("📋 Maçları Listele"):
+    with st.spinner("StatsBomb'dan maçlar çekiliyor..."):
+        matches = get_statsbomb_matches(competition_id, season_id)
+        if not matches.empty:
+            st.success(f"{len(matches)} maç bulundu!")
+            # Maç ID'leri ve isimleri
+            match_options = []
+            for idx, row in matches.iterrows():
+                home = row.get('home_team', {}).get('home_team_name', '?')
+                away = row.get('away_team', {}).get('away_team_name', '?')
+                match_date = row.get('match_date', '')
+                match_id = row.get('match_id', '')
+                match_options.append({
+                    "display": f"{home} vs {away} ({match_date})",
+                    "match_id": match_id,
+                    "home": home,
+                    "away": away
+                })
+            
+            # Maç seçimi için dropdown
+            selected_match_label = st.selectbox(
+                "📅 Maç Seç",
+                options=[m["display"] for m in match_options]
+            )
+            selected_match = next(m for m in match_options if m["display"] == selected_match_label)
+            match_id = selected_match["match_id"]
+            
+            # Olayları göster
+            if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster"):
+                with st.spinner("Olaylar çekiliyor..."):
+                    events = get_statsbomb_events(match_id)
+                    if not events.empty:
+                        st.success(f"{len(events)} olay bulundu!")
+                        # Olay türlerini filtreleme seçeneği
+                        event_types = events['type'].unique().tolist()
+                        selected_types = st.multiselect(
+                            "🔍 Olay Türlerini Filtrele",
+                            options=event_types,
+                            default=event_types[:5]
+                        )
+                        if selected_types:
+                            filtered_events = events[events['type'].isin(selected_types)]
+                            st.dataframe(filtered_events, use_container_width=True)
+                        else:
+                            st.dataframe(events, use_container_width=True)
+                        
+                        # Özet istatistikler
+                        st.subheader("📊 Olay Özeti")
+                        summary = events['type'].value_counts().reset_index()
+                        summary.columns = ['Olay Türü', 'Sayı']
+                        st.dataframe(summary, use_container_width=True)
+                    else:
+                        st.warning("Bu maç için olay verisi bulunamadı.")
+        else:
+            st.error("Maç listesi alınamadı. Turnuva ID'lerini kontrol edin.")
