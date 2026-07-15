@@ -6,3 +6,7 @@ matplotlib
 mplsoccer
 plotly
 scikit-learn
+soccerdata
+statsbombpy
+beautifulsoup4
+lxml
