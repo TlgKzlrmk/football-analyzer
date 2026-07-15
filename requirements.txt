@@ -11,3 +11,4 @@ statsbombpy
 beautifulsoup4
 lxml
 sports-skills
+cloudscraper
