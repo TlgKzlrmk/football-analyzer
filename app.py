@@ -76,11 +76,11 @@ if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 
             else:
                 st.warning("xG verisi alınamadı. Understat'te bu sezon verisi olmayabilir.")
 
-# ============ FBref TAKIM İSTATİSTİKLERİ (Chrome'suz) ============
+# ============ FBref TAKIM İSTATİSTİKLERİ (sports-skills ile) ============
 if st.button("📈 Takım İstatistikleri (FBref)"):
-    with st.spinner("FBref'ten veri çekiliyor..."):
-        # Önce 2024-2025 dene, olmazsa 2023-2024
-        for season in ["2024-2025", "2023-2024"]:
+    with st.spinner("Veri çekiliyor (sports-skills üzerinden)..."):
+        # Önce 2024 dene, olmazsa 2023
+        for season in ["2024", "2023"]:
             df = get_fbref_team_stats(league_name, season)
             if not df.empty and "Hata" not in df.columns:
                 st.success(f"{season} sezonu verisi başarıyla çekildi!")
@@ -92,7 +92,7 @@ if st.button("📈 Takım İstatistikleri (FBref)"):
                 else:
                     st.warning(f"{season} sezonu için veri alınamadı.")
         else:
-            st.error("FBref'ten hiçbir sezon için veri alınamadı.")
+            st.error("Hiçbir sezon için veri alınamadı.")
 
 # ============ sports-skills Test Alanı ============
 st.markdown("---")
