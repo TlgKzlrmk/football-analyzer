@@ -361,3 +361,168 @@ def get_ss_player_stats(player_id: str):
     except Exception as e:
         print(f"sports-skills oyuncu istatistikleri hatası: {e}")
         return None
+
+# ==================== TAKIM FORMU HESAPLAMA (HİBRİT) ====================
+def get_team_recent_matches(team_id, league_code, limit=10):
+    """
+    Bir takımın son N maçını çeker.
+    Önce Football-Data.org, olmazsa sports-skills.
+    """
+    matches = get_team_matches(team_id, limit=limit)
+    if "error" not in matches:
+        return matches.get("matches", [])
+    
+    # sports-skills yedek
+    from sports_skills import football
+    try:
+        # Takım adını al
+        team_info = get_team_info(team_id)
+        if "error" not in team_info:
+            team_name = team_info.get("name", "").lower().replace(" ", "-")
+            if team_name:
+                # Lig ID'sini bul
+                league_map = {
+                    "PL": "premier-league",
+                    "PD": "la-liga",
+                    "BL1": "bundesliga",
+                    "SA": "serie-a",
+                    "FL1": "ligue-1",
+                }
+                ss_league = league_map.get(league_code, "premier-league")
+                season_id = f"{ss_league}-2024"
+                result = football.get_season_fixtures(season_id=season_id)
+                if result and "data" in result:
+                    fixtures = result["data"].get("fixtures", [])
+                    team_matches = []
+                    for m in fixtures:
+                        if team_name in m.get("home_team", "").lower() or team_name in m.get("away_team", "").lower():
+                            team_matches.append(m)
+                    return team_matches[:limit]
+    except:
+        pass
+    
+    return []
+
+def calculate_team_form(team_id, league_code, match_limit=10):
+    """
+    Takımın son N maçlık form metriklerini hesaplar.
+    Dönen değer: {'puan_avg', 'xg_avg', 'gol_avg', 'yediği_gol_avg', 'maç_sayısı', 'galibiyet', 'beraberlik', 'mağlubiyet'}
+    """
+    matches = get_team_recent_matches(team_id, league_code, limit=match_limit)
+    
+    if not matches:
+        return {
+            'puan_avg': 0,
+            'xg_avg': 0,
+            'gol_avg': 0,
+            'yediği_gol_avg': 0,
+            'maç_sayısı': 0,
+            'galibiyet': 0,
+            'beraberlik': 0,
+            'mağlubiyet': 0,
+            'form_str': 'Veri yok'
+        }
+    
+    total_points = 0
+    total_xg = 0
+    total_goals_for = 0
+    total_goals_against = 0
+    wins = 0
+    draws = 0
+    losses = 0
+    
+    # Takım adını bul
+    team_info = get_team_info(team_id)
+    team_name = team_info.get("name", "") if "error" not in team_info else ""
+    
+    for m in matches:
+        # Maç sonucunu bul
+        home_team = m.get("home_team", {}).get("name", "") if isinstance(m.get("home_team"), dict) else m.get("home_team", "")
+        away_team = m.get("away_team", {}).get("name", "") if isinstance(m.get("away_team"), dict) else m.get("away_team", "")
+        
+        # Skorları bul
+        score = m.get("score", {})
+        home_score = score.get("home", 0) if isinstance(score, dict) else 0
+        away_score = score.get("away", 0) if isinstance(score, dict) else 0
+        
+        # Takımın hangi tarafta olduğunu bul
+        if team_name and team_name in home_team:
+            is_home = True
+            goals_for = home_score
+            goals_against = away_score
+        elif team_name and team_name in away_team:
+            is_home = False
+            goals_for = away_score
+            goals_against = home_score
+        else:
+            # Takım adı eşleşmezse geç
+            continue
+        
+        total_goals_for += goals_for
+        total_goals_against += goals_against
+        
+        # Puan ve galibiyet/beraberlik/mağlubiyet
+        if goals_for > goals_against:
+            total_points += 3
+            wins += 1
+        elif goals_for == goals_against:
+            total_points += 1
+            draws += 1
+        else:
+            losses += 1
+        
+        # xG (varsa)
+        stats = m.get("statistics", {})
+        if stats:
+            if is_home:
+                total_xg += float(stats.get("home_xg", 0))
+            else:
+                total_xg += float(stats.get("away_xg", 0))
+    
+    match_count = wins + draws + losses
+    if match_count == 0:
+        return {
+            'puan_avg': 0,
+            'xg_avg': 0,
+            'gol_avg': 0,
+            'yediği_gol_avg': 0,
+            'maç_sayısı': 0,
+            'galibiyet': 0,
+            'beraberlik': 0,
+            'mağlubiyet': 0,
+            'form_str': 'Veri yok'
+        }
+    
+    return {
+        'puan_avg': round(total_points / match_count, 2),
+        'xg_avg': round(total_xg / match_count, 2) if total_xg > 0 else 0,
+        'gol_avg': round(total_goals_for / match_count, 2),
+        'yediği_gol_avg': round(total_goals_against / match_count, 2),
+        'maç_sayısı': match_count,
+        'galibiyet': wins,
+        'beraberlik': draws,
+        'mağlubiyet': losses,
+        'form_str': f"{wins}G-{draws}B-{losses}M"
+    }
+
+def get_team_hybrid_form(team_id, league_code):
+    """
+    Hem 5 maçlık hem 10 maçlık form verilerini döndürür.
+    """
+    form_5 = calculate_team_form(team_id, league_code, match_limit=5)
+    form_10 = calculate_team_form(team_id, league_code, match_limit=10)
+    
+    return {
+        'form_5': form_5,
+        'form_10': form_10,
+        'form_5_str': form_5.get('form_str', 'Veri yok'),
+        'form_10_str': form_10.get('form_str', 'Veri yok'),
+        'puan_avg_5': form_5.get('puan_avg', 0),
+        'puan_avg_10': form_10.get('puan_avg', 0),
+        'xg_avg_5': form_5.get('xg_avg', 0),
+        'xg_avg_10': form_10.get('xg_avg', 0),
+        'gol_avg_5': form_5.get('gol_avg', 0),
+        'gol_avg_10': form_10.get('gol_avg', 0),
+        'yediği_gol_avg_5': form_5.get('yediği_gol_avg', 0),
+        'yediği_gol_avg_10': form_10.get('yediği_gol_avg', 0),
+    }
