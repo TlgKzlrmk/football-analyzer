@@ -41,13 +41,9 @@ st.markdown(f"""
     h1, h2, h3, h4, p, div, span, label {{
         color: white !important;
     }}
-
-    /* ===== DROPDOWN MENÜ - KESİN ÇÖZÜM ===== */
-    /* Tüm dropdown container'ları */
     div[data-testid="stSelectbox"] {{
         background-color: transparent !important;
     }}
-    /* Dropdown butonu (seçili olan) */
     div[data-testid="stSelectbox"] div[data-baseweb="select"] {{
         background-color: #1a1a1a !important;
         border: 1px solid rgba(255,255,255,0.2) !important;
@@ -57,7 +53,6 @@ st.markdown(f"""
     div[data-testid="stSelectbox"] div[data-baseweb="select"] div {{
         color: white !important;
     }}
-    /* Dropdown açılan liste (popover) */
     div[data-testid="stSelectbox"] ul,
     div[data-testid="stSelectbox"] div[role="listbox"],
     div[data-baseweb="popover"] ul,
@@ -67,7 +62,6 @@ st.markdown(f"""
         border-radius: 10px !important;
         box-shadow: 0 8px 32px rgba(0,0,0,0.8) !important;
     }}
-    /* Dropdown öğeleri */
     div[data-testid="stSelectbox"] ul li,
     div[data-testid="stSelectbox"] div[role="listbox"] li,
     div[data-baseweb="popover"] ul li,
@@ -84,7 +78,6 @@ st.markdown(f"""
         background-color: #333333 !important;
         color: white !important;
     }}
-    /* Seçili öğe */
     div[data-testid="stSelectbox"] ul li[aria-selected="true"],
     div[data-testid="stSelectbox"] div[role="listbox"] li[aria-selected="true"],
     div[data-baseweb="popover"] ul li[aria-selected="true"],
@@ -93,8 +86,6 @@ st.markdown(f"""
         color: #1a1a1a !important;
         font-weight: 700 !important;
     }}
-
-    /* BUTON */
     .stButton > button {{
         background: linear-gradient(135deg, #f5a623, #e69500) !important;
         color: #1a1a1a !important;
@@ -180,6 +171,53 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
+# ==================== GLOBAL DEĞİŞKENLER (TÜM EKRANLAR İÇİN) ====================
+LEAGUE_CODES = {
+    "Premier League": "PL", "La Liga": "PD", "Bundesliga": "BL1",
+    "Serie A": "SA", "Ligue 1": "FL1", "Championship": "ELC",
+    "La Liga2": "SD", "Bundesliga 2": "BL2", "Serie B": "SB",
+    "Ligue 2": "FL2", "Eredivisie": "ED", "Primeira Liga": "PPL",
+    "Süper Lig": "SL", "Belçika Pro League": "BLG", "İskoçya Premier": "SCO",
+    "Avusturya Bundesliga": "AUT", "İsviçre Super League": "SUI",
+    "Yunanistan Super League": "GRE", "Rusya Premier": "RUS",
+    "Ukrayna Premier": "UKR", "Danimarka Superliga": "DEN",
+    "Norveç Eliteserien": "NOR", "İsveç Allsvenskan": "SWE",
+    "Polonya Ekstraklasa": "POL", "Hırvatistan HNL": "CRO",
+    "Sırbistan SuperLiga": "SRB", "Çek Cumhuriyeti 1. Liga": "CZE",
+    "Romanya Liga 1": "ROU", "Macaristan NB I": "HUN",
+    "Bulgaristan 1. Liga": "BUL", "Slovakya Super Liga": "SVK",
+    "Slovenya PrvaLiga": "SVN", "İrlanda Premier Division": "IRL",
+    "Şampiyonlar Ligi": "CL", "Avrupa Ligi": "EL", "Konferans Ligi": "ECL",
+    "Dünya Kupası": "WC", "Avrupa Şampiyonası": "EC",
+    "Copa America": "CAM", "Afrika Kupası": "AFC", "Asya Kupası": "ASC",
+    "FA Cup": "FAC", "EFL Cup": "FLC", "DFB-Pokal": "DFB",
+    "Coppa Italia": "CIT", "Coupe de France": "CDF",
+    "Copa del Rey": "CDR", "Türkiye Kupası": "TKC",
+}
+
+SS_LEAGUES = {
+    "Premier League": "premier-league", "La Liga": "la-liga",
+    "Bundesliga": "bundesliga", "Serie A": "serie-a",
+    "Ligue 1": "ligue-1", "Championship": "championship",
+    "La Liga2": "la-liga-2", "Bundesliga 2": "bundesliga-2",
+    "Serie B": "serie-b", "Ligue 2": "ligue-2",
+    "Eredivisie": "eredivisie", "Primeira Liga": "portugal-primeira-liga",
+    "Süper Lig": "super-lig", "Belçika Pro League": "belgian-pro-league",
+    "İskoçya Premier": "scottish-premiership", "Avusturya Bundesliga": "austrian-bundesliga",
+    "İsviçre Super League": "swiss-super-league", "Yunanistan Super League": "greek-super-league",
+    "Rusya Premier": "russian-premier-league", "Ukrayna Premier": "ukrainian-premier-league",
+    "Danimarka Superliga": "danish-superliga", "Norveç Eliteserien": "norwegian-eliteserien",
+    "İsveç Allsvenskan": "swedish-allsvenskan", "Polonya Ekstraklasa": "polish-ekstraklasa",
+    "Hırvatistan HNL": "croatian-hnl", "Sırbistan SuperLiga": "serbian-superliga",
+    "Çek Cumhuriyeti 1. Liga": "czech-1-liga", "Romanya Liga 1": "romanian-liga-1",
+    "Macaristan NB I": "hungarian-nb-i", "Bulgaristan 1. Liga": "bulgarian-1-liga",
+    "Slovakya Super Liga": "slovak-super-liga", "Slovenya PrvaLiga": "slovenian-prvaliga",
+    "İrlanda Premier Division": "irish-premier-division",
+}
+
+ALL_LEAGUES = sorted(set(list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]))
+
+# ==================== SESSION STATE ====================
 if 'page' not in st.session_state:
     st.session_state['page'] = 'home'
 if 'selected_match' not in st.session_state:
@@ -274,52 +312,6 @@ if st.session_state['page'] == 'home':
 
     # ===== LİG/TURNUVA SEÇİMİ =====
     st.markdown("### 🏆 Lig / Turnuva Seç")
-    
-    LEAGUE_CODES = {
-        "Premier League": "PL", "La Liga": "PD", "Bundesliga": "BL1",
-        "Serie A": "SA", "Ligue 1": "FL1", "Championship": "ELC",
-        "La Liga2": "SD", "Bundesliga 2": "BL2", "Serie B": "SB",
-        "Ligue 2": "FL2", "Eredivisie": "ED", "Primeira Liga": "PPL",
-        "Süper Lig": "SL", "Belçika Pro League": "BLG", "İskoçya Premier": "SCO",
-        "Avusturya Bundesliga": "AUT", "İsviçre Super League": "SUI",
-        "Yunanistan Super League": "GRE", "Rusya Premier": "RUS",
-        "Ukrayna Premier": "UKR", "Danimarka Superliga": "DEN",
-        "Norveç Eliteserien": "NOR", "İsveç Allsvenskan": "SWE",
-        "Polonya Ekstraklasa": "POL", "Hırvatistan HNL": "CRO",
-        "Sırbistan SuperLiga": "SRB", "Çek Cumhuriyeti 1. Liga": "CZE",
-        "Romanya Liga 1": "ROU", "Macaristan NB I": "HUN",
-        "Bulgaristan 1. Liga": "BUL", "Slovakya Super Liga": "SVK",
-        "Slovenya PrvaLiga": "SVN", "İrlanda Premier Division": "IRL",
-        "Şampiyonlar Ligi": "CL", "Avrupa Ligi": "EL", "Konferans Ligi": "ECL",
-        "Dünya Kupası": "WC", "Avrupa Şampiyonası": "EC",
-        "Copa America": "CAM", "Afrika Kupası": "AFC", "Asya Kupası": "ASC",
-        "FA Cup": "FAC", "EFL Cup": "FLC", "DFB-Pokal": "DFB",
-        "Coppa Italia": "CIT", "Coupe de France": "CDF",
-        "Copa del Rey": "CDR", "Türkiye Kupası": "TKC",
-    }
-
-    SS_LEAGUES = {
-        "Premier League": "premier-league", "La Liga": "la-liga",
-        "Bundesliga": "bundesliga", "Serie A": "serie-a",
-        "Ligue 1": "ligue-1", "Championship": "championship",
-        "La Liga2": "la-liga-2", "Bundesliga 2": "bundesliga-2",
-        "Serie B": "serie-b", "Ligue 2": "ligue-2",
-        "Eredivisie": "eredivisie", "Primeira Liga": "portugal-primeira-liga",
-        "Süper Lig": "super-lig", "Belçika Pro League": "belgian-pro-league",
-        "İskoçya Premier": "scottish-premiership", "Avusturya Bundesliga": "austrian-bundesliga",
-        "İsviçre Super League": "swiss-super-league", "Yunanistan Super League": "greek-super-league",
-        "Rusya Premier": "russian-premier-league", "Ukrayna Premier": "ukrainian-premier-league",
-        "Danimarka Superliga": "danish-superliga", "Norveç Eliteserien": "norwegian-eliteserien",
-        "İsveç Allsvenskan": "swedish-allsvenskan", "Polonya Ekstraklasa": "polish-ekstraklasa",
-        "Hırvatistan HNL": "croatian-hnl", "Sırbistan SuperLiga": "serbian-superliga",
-        "Çek Cumhuriyeti 1. Liga": "czech-1-liga", "Romanya Liga 1": "romanian-liga-1",
-        "Macaristan NB I": "hungarian-nb-i", "Bulgaristan 1. Liga": "bulgarian-1-liga",
-        "Slovakya Super Liga": "slovak-super-liga", "Slovenya PrvaLiga": "slovenian-prvaliga",
-        "İrlanda Premier Division": "irish-premier-division",
-    }
-
-    ALL_LEAGUES = sorted(set(list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]))
-
     selected_league = st.selectbox("🏆 Lig veya Turnuva Seçin:", ALL_LEAGUES, key="league_select_home")
 
     if st.button("🚀 Maçları Getir ve Analiz Et", use_container_width=True):
