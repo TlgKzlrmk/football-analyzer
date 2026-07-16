@@ -7,12 +7,8 @@ import os
 from datetime import datetime, timedelta
 
 # Football-Data.org anahtarını Streamlit secrets'tan al
-API_KEY_FOOTBALL_DATA = os.environ.get("FOOTBALL_DATA_API_KEY", "your_key_here")
+API_KEY_FOOTBALL_DATA = os.environ.get("FOOTBALL_DATA_API_KEY", "683de67308df4cfcb2ef3051100bdc66")
 FOOTBALL_DATA_BASE = "https://api.football-data.org/v4"
-
-# BSD API anahtarını Streamlit secrets'tan al
-BZZOIRO_API_KEY = os.environ.get("BZZOIRO_API_KEY", "your_bsd_key_here")
-BZZOIRO_BASE_URL = "https://sports.bzzoiro.com"
 
 # Önbellek klasörü
 CACHE_DIR = "cache"
@@ -161,4 +157,3 @@ def get_ss_player_stats(player_id: str):
     except Exception as e:
         print(f"sports-skills oyuncu istatistikleri hatası: {e}")
         return None
-
