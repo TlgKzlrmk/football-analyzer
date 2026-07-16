@@ -444,3 +444,277 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
 else:
     st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
 
+# ==================== MAÇ ÖZET RAPORU ====================
+st.markdown("---")
+st.subheader("📋 Maç Özet Raporu (StatsBomb)")
+
+if 'selected_match' in st.session_state and st.session_state['selected_match']:
+    selected_match = st.session_state['selected_match']
+    match_id = st.session_state.get('match_id', None)
+    
+    if st.button(f"📄 {selected_match['home']} - {selected_match['away']} Maç Özet Raporu Oluştur", key="generate_match_report"):
+        if not match_id:
+            st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
+        else:
+            with st.spinner("Maç özet raporu oluşturuluyor..."):
+                try:
+                    events = st.session_state.get('events', None)
+                    if events is None or events.empty:
+                        events = get_statsbomb_events(match_id)
+                    
+                    if events.empty:
+                        st.warning("Bu maç için olay verisi bulunamadı.")
+                        st.stop()
+                    
+                    # --- 1. TEMEL MAÇ BİLGİLERİ ---
+                    st.subheader("📌 Maç Bilgileri")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("🏠 Ev Sahibi", selected_match['home'])
+                    with col2:
+                        st.metric("✈️ Deplasman", selected_match['away'])
+                    with col3:
+                        # Maç tarihini bul
+                        match_date = events['event_date'].iloc[0] if 'event_date' in events.columns else 'Tarih yok'
+                        st.metric("📅 Tarih", match_date[:10] if len(str(match_date)) > 10 else str(match_date))
+                    
+                    st.divider()
+                    
+                    # --- 2. TEMEL İSTATİSTİKLER ---
+                    st.subheader("📊 Temel İstatistikler")
+                    
+                    # Olayları filtrele
+                    passes = events[events['type'] == 'Pass'].copy() if 'type' in events.columns else pd.DataFrame()
+                    shots = events[events['type'] == 'Shot'].copy() if 'type' in events.columns else pd.DataFrame()
+                    carries = events[events['type'] == 'Carry'].copy() if 'type' in events.columns else pd.DataFrame()
+                    pressures = events[events['type'] == 'Pressure'].copy() if 'type' in events.columns else pd.DataFrame()
+                    
+                    # Takım bazlı istatistikler
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    # Pas istatistikleri
+                    total_passes = len(passes)
+                    with col1:
+                        st.metric("🔄 Toplam Pas", total_passes)
+                    
+                    # Şut istatistikleri
+                    total_shots = len(shots)
+                    with col2:
+                        st.metric("🎯 Toplam Şut", total_shots)
+                    
+                    # Pres istatistikleri
+                    total_pressures = len(pressures)
+                    with col3:
+                        st.metric("🔥 Pres Sayısı", total_pressures)
+                    
+                    # Top taşıma
+                    total_carries = len(carries)
+                    with col4:
+                        st.metric("🏃 Top Taşıma", total_carries)
+                    
+                    st.divider()
+                    
+                    # --- 3. xG VE ŞUT HARİTASI ---
+                    st.subheader("🎯 xG ve Şut Haritası")
+                    
+                    if not shots.empty:
+                        # xG hesapla
+                        shot_xg = []
+                        for idx, row in shots.iterrows():
+                            shot_data = row.get('shot', {})
+                            if isinstance(shot_data, dict):
+                                xg = shot_data.get('statsbomb_xg', None)
+                                if xg is not None:
+                                    try:
+                                        shot_xg.append(float(xg))
+                                    except:
+                                        pass
+                        
+                        if shot_xg:
+                            total_xg = sum(shot_xg)
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.metric("⚡ Toplam xG", round(total_xg, 2))
+                            with col2:
+                                st.metric("📊 Ortalama xG/Şut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
+                        
+                        # Şut haritasını göster
+                        st.caption("⬇️ Şut haritası aşağıda gösteriliyor")
+                        # Mevcut şut haritası kodunu burada kullanabiliriz
+                        import matplotlib.pyplot as plt
+                        from mplsoccer import Pitch
+                        
+                        pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
+                        fig, ax = pitch.draw(figsize=(10, 7))
+                        
+                        for idx, row in shots.iterrows():
+                            location = row.get('location', [])
+                            if len(location) >= 2:
+                                x = float(location[0]) if location[0] is not None else None
+                                y = float(location[1]) if location[1] is not None else None
+                                if x is not None and y is not None:
+                                    # Gol mü?
+                                    shot_data = row.get('shot', {})
+                                    outcome = shot_data.get('outcome', {}).get('name', '') if isinstance(shot_data, dict) else ''
+                                    is_goal = outcome == 'Goal'
+                                    color = 'red' if is_goal else 'blue'
+                                    ax.scatter(x, y, s=150, color=color, alpha=0.7, edgecolors='white')
+                                    # xG değerini yaz
+                                    if isinstance(shot_data, dict):
+                                        xg_val = shot_data.get('statsbomb_xg', None)
+                                        if xg_val is not None:
+                                            ax.text(x+2, y+2, f"{float(xg_val):.2f}", color='white', fontsize=7)
+                        
+                        ax.set_title(f"Şut Haritası - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
+                        st.pyplot(fig)
+                    else:
+                        st.info("Bu maçta şut verisi bulunamadı.")
+                    
+                    st.divider()
+                    
+                    # --- 4. PAS AĞI ---
+                    st.subheader("🔗 Pas Ağı")
+                    if not passes.empty:
+                        # Pas ağını göster (mevcut pas ağı kodunu kullan)
+                        import numpy as np
+                        player_positions = {}
+                        pass_counts = {}
+                        
+                        for idx, row in passes.iterrows():
+                            player = None
+                            if 'player' in row and isinstance(row['player'], dict):
+                                player = row['player'].get('name', None)
+                            elif 'player_name' in row:
+                                player = row['player_name']
+                            elif 'player' in row and isinstance(row['player'], str):
+                                player = row['player']
+                            
+                            if not player:
+                                continue
+                            
+                            loc = row.get('location', [])
+                            if len(loc) >= 2:
+                                try:
+                                    x = float(loc[0])
+                                    y = float(loc[1])
+                                except:
+                                    continue
+                            else:
+                                continue
+                            
+                            if player not in player_positions:
+                                player_positions[player] = {'x': [], 'y': [], 'total': 0}
+                            player_positions[player]['x'].append(x)
+                            player_positions[player]['y'].append(y)
+                            player_positions[player]['total'] += 1
+                            
+                            recipient = None
+                            if 'pass' in row and isinstance(row['pass'], dict):
+                                pdata = row['pass']
+                                if 'recipient' in pdata and isinstance(pdata['recipient'], dict):
+                                    recipient = pdata['recipient'].get('name', None)
+                            
+                            if recipient and recipient != player:
+                                key = tuple(sorted([player, recipient]))
+                                if key not in pass_counts:
+                                    pass_counts[key] = 0
+                                pass_counts[key] += 1
+                        
+                        active_players = [p for p, data in player_positions.items() if data['total'] >= 3]
+                        if len(active_players) >= 2:
+                            positions = {}
+                            for p in active_players:
+                                data = player_positions[p]
+                                positions[p] = {
+                                    'x': np.mean(data['x']),
+                                    'y': np.mean(data['y']),
+                                    'total': data['total']
+                                }
+                            
+                            connections = {k: v for k, v in pass_counts.items() 
+                                           if k[0] in active_players and k[1] in active_players and v >= 2}
+                            
+                            if connections:
+                                pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
+                                fig, ax = pitch.draw(figsize=(12, 8))
+                                
+                                for player, pos in positions.items():
+                                    x = pos['x']
+                                    y = pos['y']
+                                    size = 150 + (pos['total'] * 3)
+                                    ax.scatter(x, y, s=size, color='#00ffcc', edgecolors='white', zorder=5, alpha=0.8)
+                                    ax.text(x, y-3, player, color='white', ha='center', fontsize=8, fontweight='bold')
+                                
+                                for (p1, p2), count in connections.items():
+                                    if p1 in positions and p2 in positions:
+                                        x1 = positions[p1]['x']
+                                        y1 = positions[p1]['y']
+                                        x2 = positions[p2]['x']
+                                        y2 = positions[p2]['y']
+                                        linewidth = 1 + (count / 3)
+                                        alpha = min(0.8, 0.2 + (count / 10))
+                                        ax.plot([x1, x2], [y1, y2], color='cyan', linewidth=linewidth, alpha=alpha, zorder=2)
+                                
+                                ax.set_title(f"Pas Ağı - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
+                                st.pyplot(fig)
+                            else:
+                                st.info("Pas bağlantıları yeterli değil.")
+                        else:
+                            st.info("Yeterli pas verisi yok.")
+                    else:
+                        st.info("Bu maçta pas verisi bulunamadı.")
+                    
+                    st.divider()
+                    
+                    # --- 5. OYUNCU İSTATİSTİKLERİ (ÖZET) ---
+                    st.subheader("🏅 Öne Çıkan Oyuncular")
+                    
+                    if not passes.empty:
+                        # En çok pas yapan oyuncular
+                        pass_counts_by_player = {}
+                        for idx, row in passes.iterrows():
+                            player = None
+                            if 'player' in row and isinstance(row['player'], dict):
+                                player = row['player'].get('name', None)
+                            elif 'player_name' in row:
+                                player = row['player_name']
+                            elif 'player' in row and isinstance(row['player'], str):
+                                player = row['player']
+                            if player:
+                                pass_counts_by_player[player] = pass_counts_by_player.get(player, 0) + 1
+                        
+                        if pass_counts_by_player:
+                            top_passers = sorted(pass_counts_by_player.items(), key=lambda x: x[1], reverse=True)[:5]
+                            st.write("**En Çok Pas Yapan Oyuncular**")
+                            df_passes = pd.DataFrame(top_passers, columns=["Oyuncu", "Pas Sayısı"])
+                            st.dataframe(df_passes, use_container_width=True, hide_index=True)
+                    
+                    if not shots.empty:
+                        # En çok şut çeken oyuncular
+                        shot_counts_by_player = {}
+                        for idx, row in shots.iterrows():
+                            player = None
+                            if 'player' in row and isinstance(row['player'], dict):
+                                player = row['player'].get('name', None)
+                            elif 'player_name' in row:
+                                player = row['player_name']
+                            elif 'player' in row and isinstance(row['player'], str):
+                                player = row['player']
+                            if player:
+                                shot_counts_by_player[player] = shot_counts_by_player.get(player, 0) + 1
+                        
+                        if shot_counts_by_player:
+                            top_shooters = sorted(shot_counts_by_player.items(), key=lambda x: x[1], reverse=True)[:5]
+                            st.write("**En Çok Şut Çeken Oyuncular**")
+                            df_shots = pd.DataFrame(top_shooters, columns=["Oyuncu", "Şut Sayısı"])
+                            st.dataframe(df_shots, use_container_width=True, hide_index=True)
+                    
+                    st.success("✅ Maç özet raporu başarıyla oluşturuldu!")
+                    
+                except Exception as e:
+                    st.error(f"Rapor oluşturulurken hata: {str(e)}")
+                    with st.expander("🔍 Hata Ayıklama: Ham Olay Verisi (İlk 5)"):
+                        if 'events' in st.session_state:
+                            st.dataframe(st.session_state['events'].head(5))
+else:
+    st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
