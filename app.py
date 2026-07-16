@@ -272,7 +272,7 @@ else:
     if 'match_options' not in st.session_state or not st.session_state['match_options']:
         st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
-# ==================== PAS AĞI GÖRSELLEŞTİRME (MANUEL ÇİZİM) ====================
+# ==================== PAS AĞI GÖRSELLEŞTİRME (SORUNSUZ) ====================
 st.markdown("---")
 st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
 
@@ -280,179 +280,191 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
     selected_match = st.session_state['selected_match']
     match_id = st.session_state.get('match_id', None)
     
-    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_network_manual"):
+    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_final"):
         if not match_id:
             st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
         else:
             with st.spinner("Pas verileri işleniyor..."):
                 try:
+                    # 1. Veriyi al
                     events = st.session_state.get('events', None)
                     if events is None or events.empty:
                         events = get_statsbomb_events(match_id)
                     
                     if events.empty:
                         st.warning("Bu maç için olay verisi bulunamadı.")
-                    else:
-                        # Pas olaylarını filtrele
-                        if 'type' in events.columns:
-                            passes = events[events['type'] == 'Pass'].copy()
-                        else:
-                            st.warning("'type' sütunu bulunamadı.")
-                            passes = pd.DataFrame()
-                        
-                        if passes.empty:
-                            st.warning("Bu maçta pas verisi bulunamadı.")
-                        else:
-                            import numpy as np
-                            import matplotlib.pyplot as plt
+                        st.stop()
+                    
+                    # 2. Pasları filtrele
+                    if 'type' not in events.columns:
+                        st.warning("'type' sütunu bulunamadı.")
+                        st.stop()
+                    
+                    passes = events[events['type'] == 'Pass'].copy()
+                    if passes.empty:
+                        st.warning("Bu maçta pas verisi bulunamadı.")
+                        st.stop()
+                    
+                    # 3. Veriyi işle (GÜVENLİ)
+                    import numpy as np
+                    player_positions = {}
+                    pass_counts = {}
+                    error_rows = []
+                    
+                    for idx, row in passes.iterrows():
+                        try:
+                            # Oyuncu adı
+                            player = None
+                            if 'player' in row and isinstance(row['player'], dict):
+                                player = row['player'].get('name')
+                            elif 'player_name' in row:
+                                player = row['player_name']
+                            elif 'player' in row and isinstance(row['player'], str):
+                                player = row['player']
+                            elif 'player_id' in row:
+                                player = f"P{row['player_id']}"
                             
-                            # Verileri işle
-                            player_positions = {}
-                            pass_counts = {}
+                            if not player:
+                                continue
                             
-                            for idx, row in passes.iterrows():
-                                # Oyuncu adı
-                                player = None
-                                if 'player' in row and isinstance(row['player'], dict):
-                                    player = row['player'].get('name', None)
-                                elif 'player_name' in row:
-                                    player = row['player_name']
-                                elif 'player' in row and isinstance(row['player'], str):
-                                    player = row['player']
-                                elif 'player_id' in row:
-                                    player = f"P{row['player_id']}"
-                                
-                                if not player:
-                                    continue
-                                
-                                # Konum (float çevir)
-                                if 'location' in row:
-                                    loc = row['location']
-                                    if isinstance(loc, list) and len(loc) >= 2:
-                                        try:
-                                            x = float(loc[0])
-                                            y = float(loc[1])
-                                        except:
-                                            continue
-                                    else:
-                                        continue
-                                else:
-                                    continue
-                                
-                                # Oyuncu pozisyonlarını güncelle
-                                if player not in player_positions:
-                                    player_positions[player] = {'x': [], 'y': [], 'total': 0}
-                                player_positions[player]['x'].append(x)
-                                player_positions[player]['y'].append(y)
-                                player_positions[player]['total'] += 1
-                                
-                                # Pas alıcısı
-                                recipient = None
-                                if 'pass' in row and isinstance(row['pass'], dict):
-                                    pdata = row['pass']
-                                    if 'recipient' in pdata and isinstance(pdata['recipient'], dict):
-                                        recipient = pdata['recipient'].get('name', None)
-                                    elif 'recipient_name' in pdata:
-                                        recipient = pdata['recipient_name']
-                                    elif 'recipient' in pdata and isinstance(pdata['recipient'], str):
-                                        recipient = pdata['recipient']
-                                elif 'pass_recipient' in row:
-                                    recipient = row['pass_recipient']
-                                elif 'recipient' in row:
-                                    recipient = row['recipient']
-                                
-                                if recipient and recipient != player:
-                                    key = tuple(sorted([player, recipient]))
-                                    if key not in pass_counts:
-                                        pass_counts[key] = 0
-                                    pass_counts[key] += 1
+                            # Konum
+                            if 'location' not in row:
+                                continue
+                            loc = row['location']
+                            if not isinstance(loc, (list, tuple)) or len(loc) < 2:
+                                continue
                             
-                            # En az 3 pas yapan oyuncular
-                            active = [p for p, data in player_positions.items() if data['total'] >= 3]
-                            if len(active) < 2:
-                                st.warning(f"Yeterli pas verisi yok (en az 3 pas yapan {len(active)} oyuncu, 2 gerekli).")
-                            else:
-                                # Pozisyon ortalamaları
-                                positions = {}
-                                for p in active:
-                                    data = player_positions[p]
-                                    positions[p] = {
-                                        'x': float(np.mean(data['x'])),
-                                        'y': float(np.mean(data['y'])),
-                                        'total': data['total']
-                                    }
-                                
-                                # Bağlantılar (en az 2 pas)
-                                connections = {k: v for k, v in pass_counts.items() 
-                                               if k[0] in active and k[1] in active and v >= 2}
-                                
-                                if not connections:
-                                    st.warning("Yeterli pas bağlantısı yok (en az 2 pas).")
-                                else:
-                                    # --- MANUEL SAHA ÇİZİMİ ---
-                                    fig, ax = plt.subplots(figsize=(12, 8))
-                                    
-                                    # Saha zemin rengi
-                                    ax.set_facecolor('#22312b')
-                                    
-                                    # Saha çizgileri (StatsBomb boyutları: 120x80)
-                                    # Dış çizgi
-                                    ax.plot([0, 120, 120, 0, 0], [0, 0, 80, 80, 0], color='#c7d5cc', linewidth=2)
-                                    # Orta çizgi
-                                    ax.plot([60, 60], [0, 80], color='#c7d5cc', linewidth=2)
-                                    # Orta yuvarlak
-                                    circle = plt.Circle((60, 40), 9.15, color='#c7d5cc', fill=False, linewidth=2)
-                                    ax.add_patch(circle)
-                                    # Ceza sahaları
-                                    ax.plot([0, 16.5, 16.5, 0], [30.34, 30.34, 49.66, 49.66], color='#c7d5cc', linewidth=2)
-                                    ax.plot([120, 103.5, 103.5, 120], [30.34, 30.34, 49.66, 49.66], color='#c7d5cc', linewidth=2)
-                                    # Kaleciler (küçük kareler)
-                                    ax.plot([0, 5.5, 5.5, 0], [34.34, 34.34, 45.66, 45.66], color='#c7d5cc', linewidth=2)
-                                    ax.plot([120, 114.5, 114.5, 120], [34.34, 34.34, 45.66, 45.66], color='#c7d5cc', linewidth=2)
-                                    # Penaltı noktaları
-                                    ax.scatter(11, 40, color='#c7d5cc', s=50, zorder=1)
-                                    ax.scatter(109, 40, color='#c7d5cc', s=50, zorder=1)
-                                    
-                                    # Oyuncuları yerleştir
-                                    for player, pos in positions.items():
-                                        x = pos['x']
-                                        y = pos['y']
-                                        size = 150 + (pos['total'] * 3)
-                                        ax.scatter(x, y, s=size, color='#00ffcc', edgecolors='white', zorder=5, alpha=0.8)
-                                        ax.text(x, y-3, player, color='white', ha='center', fontsize=8, fontweight='bold')
-                                    
-                                    # Pas bağlantılarını çiz
-                                    for (p1, p2), count in connections.items():
-                                        if p1 in positions and p2 in positions:
-                                            x1 = positions[p1]['x']
-                                            y1 = positions[p1]['y']
-                                            x2 = positions[p2]['x']
-                                            y2 = positions[p2]['y']
-                                            
-                                            linewidth = 1 + (count / 3)
-                                            alpha = min(0.8, 0.2 + (count / 10))
-                                            ax.plot([x1, x2], [y1, y2], 
-                                                   color='cyan', linewidth=linewidth, alpha=alpha, zorder=2)
-                                    
-                                    ax.set_xlim(0, 120)
-                                    ax.set_ylim(0, 80)
-                                    ax.set_aspect('equal')
-                                    ax.axis('off')
-                                    ax.set_title(f"Pas Ağı - {selected_match['home']} vs {selected_match['away']}", 
-                                                color='white', fontsize=14)
-                                    
-                                    st.pyplot(fig)
-                                    
-                                    col1, col2, col3 = st.columns(3)
-                                    with col1:
-                                        st.metric("Toplam Pas", len(passes))
-                                    with col2:
-                                        st.metric("Aktif Oyuncu", len(active))
-                                    with col3:
-                                        if positions:
-                                            most = max(positions.items(), key=lambda x: x[1]['total'])
-                                            st.metric("En Çok Pas", most[0])
-                                    
+                            try:
+                                x = float(loc[0])
+                                y = float(loc[1])
+                            except (ValueError, TypeError):
+                                continue
+                            
+                            # Pozisyonları güncelle
+                            if player not in player_positions:
+                                player_positions[player] = {'x': [], 'y': [], 'total': 0}
+                            player_positions[player]['x'].append(x)
+                            player_positions[player]['y'].append(y)
+                            player_positions[player]['total'] += 1
+                            
+                            # Pas alıcısı
+                            recipient = None
+                            if 'pass' in row and isinstance(row['pass'], dict):
+                                pdata = row['pass']
+                                if 'recipient' in pdata and isinstance(pdata['recipient'], dict):
+                                    recipient = pdata['recipient'].get('name')
+                                elif 'recipient_name' in pdata:
+                                    recipient = pdata['recipient_name']
+                                elif 'recipient' in pdata and isinstance(pdata['recipient'], str):
+                                    recipient = pdata['recipient']
+                            elif 'pass_recipient' in row:
+                                recipient = row['pass_recipient']
+                            elif 'recipient' in row:
+                                recipient = row['recipient']
+                            
+                            if recipient and recipient != player:
+                                key = tuple(sorted([player, recipient]))
+                                if key not in pass_counts:
+                                    pass_counts[key] = 0
+                                pass_counts[key] += 1
+                        except Exception as e:
+                            error_rows.append((idx, str(e)))
+                            continue
+                    
+                    # Hata raporu
+                    if error_rows:
+                        st.warning(f"{len(error_rows)} satır işlenirken hata oluştu. İlk 5:")
+                        st.dataframe(pd.DataFrame(error_rows[:5], columns=['Satır', 'Hata']))
+                    
+                    # 4. Oyuncu filtrele (en az 3 pas)
+                    active = [p for p, data in player_positions.items() if data['total'] >= 3]
+                    if len(active) < 2:
+                        st.warning(f"Yeterli pas verisi yok (en az 3 pas yapan {len(active)} oyuncu, 2 gerekli).")
+                        st.stop()
+                    
+                    # 5. Pozisyon ortalamaları
+                    positions = {}
+                    for p in active:
+                        data = player_positions[p]
+                        try:
+                            mean_x = float(np.mean(data['x']))
+                            mean_y = float(np.mean(data['y']))
+                        except:
+                            continue
+                        positions[p] = {'x': mean_x, 'y': mean_y, 'total': data['total']}
+                    
+                    if not positions:
+                        st.warning("Pozisyon hesaplanamadı.")
+                        st.stop()
+                    
+                    # 6. Bağlantılar (en az 2 pas)
+                    connections = {}
+                    for (p1, p2), count in pass_counts.items():
+                        try:
+                            count_int = int(count)
+                        except:
+                            continue
+                        if p1 in positions and p2 in positions and count_int >= 2:
+                            connections[(p1, p2)] = count_int
+                    
+                    if not connections:
+                        st.warning("Yeterli pas bağlantısı yok (en az 2 pas).")
+                        st.stop()
+                    
+                    # 7. MANUEL SAHA ÇİZİMİ
+                    fig, ax = plt.subplots(figsize=(12, 8))
+                    ax.set_facecolor('#22312b')
+                    
+                    # Saha çizgileri (StatsBomb 120x80)
+                    ax.plot([0, 120, 120, 0, 0], [0, 0, 80, 80, 0], color='#c7d5cc', linewidth=2)
+                    ax.plot([60, 60], [0, 80], color='#c7d5cc', linewidth=2)
+                    circle = plt.Circle((60, 40), 9.15, color='#c7d5cc', fill=False, linewidth=2)
+                    ax.add_patch(circle)
+                    ax.plot([0, 16.5, 16.5, 0], [30.34, 30.34, 49.66, 49.66], color='#c7d5cc', linewidth=2)
+                    ax.plot([120, 103.5, 103.5, 120], [30.34, 30.34, 49.66, 49.66], color='#c7d5cc', linewidth=2)
+                    ax.plot([0, 5.5, 5.5, 0], [34.34, 34.34, 45.66, 45.66], color='#c7d5cc', linewidth=2)
+                    ax.plot([120, 114.5, 114.5, 120], [34.34, 34.34, 45.66, 45.66], color='#c7d5cc', linewidth=2)
+                    ax.scatter(11, 40, color='#c7d5cc', s=50, zorder=1)
+                    ax.scatter(109, 40, color='#c7d5cc', s=50, zorder=1)
+                    
+                    # Oyuncuları yerleştir
+                    for player, pos in positions.items():
+                        x = pos['x']
+                        y = pos['y']
+                        size = 150 + (pos['total'] * 3)
+                        ax.scatter(x, y, s=size, color='#00ffcc', edgecolors='white', zorder=5, alpha=0.8)
+                        ax.text(x, y-3, player, color='white', ha='center', fontsize=8, fontweight='bold')
+                    
+                    # Bağlantıları çiz
+                    for (p1, p2), count in connections.items():
+                        if p1 in positions and p2 in positions:
+                            x1 = positions[p1]['x']
+                            y1 = positions[p1]['y']
+                            x2 = positions[p2]['x']
+                            y2 = positions[p2]['y']
+                            linewidth = 1 + (count / 3)
+                            alpha = min(0.8, 0.2 + (count / 10))
+                            ax.plot([x1, x2], [y1, y2], color='cyan', linewidth=linewidth, alpha=alpha, zorder=2)
+                    
+                    ax.set_xlim(0, 120)
+                    ax.set_ylim(0, 80)
+                    ax.set_aspect('equal')
+                    ax.axis('off')
+                    ax.set_title(f"Pas Ağı - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
+                    
+                    st.pyplot(fig)
+                    
+                    # Metrikler
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Toplam Pas", len(passes))
+                    with col2:
+                        st.metric("Aktif Oyuncu", len(active))
+                    with col3:
+                        if positions:
+                            most = max(positions.items(), key=lambda x: x[1]['total'])
+                            st.metric("En Çok Pas", most[0])
+                    
                 except Exception as e:
                     st.error(f"Pas ağı oluşturulurken hata: {str(e)}")
                     with st.expander("🔍 Hata Ayıklama: Ham Olay Verisi (İlk 5)"):
