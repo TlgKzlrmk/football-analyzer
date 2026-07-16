@@ -273,7 +273,7 @@ else:
     if 'match_options' not in st.session_state or not st.session_state['match_options']:
         st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
-# ==================== PAS AĞI GÖRSELLEŞTİRME (DÜZELTİLMİŞ) ====================
+# ==================== PAS AĞI GÖRSELLEŞTİRME (SON DÜZELTME) ====================
 st.markdown("---")
 st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
 
@@ -305,35 +305,56 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             player_passes = {}
                             
                             for idx, row in passes.iterrows():
-                                # --- Güvenli oyuncu okuma ---
-                                player_data = row.get('player', {})
-                                if isinstance(player_data, dict):
-                                    player = player_data.get('name', 'Bilinmeyen')
-                                else:
-                                    player = str(player_data) if player_data else 'Bilinmeyen'
+                                # --- OYUNCU ADINI GÜVENLİ OKU ---
+                                player = None
+                                # 1. Yöntem: doğrudan player sütunu
+                                if 'player' in row and isinstance(row['player'], dict):
+                                    player = row['player'].get('name', None)
+                                elif 'player_name' in row:
+                                    player = row['player_name']
+                                elif 'player_id' in row:
+                                    # ID'den isim bulmak için ayrıca bir harita oluşturulabilir, ama şimdilik geçelim
+                                    player = f"Oyuncu_{row['player_id']}"
                                 
-                                start_x = row.get('location', [None, None])[0]
-                                start_y = row.get('location', [None, None])[1]
+                                if not player:
+                                    continue
+                                
+                                # --- KONUM BİLGİSİ ---
+                                location = row.get('location', [])
+                                if len(location) >= 2:
+                                    start_x, start_y = location[0], location[1]
+                                else:
+                                    continue
                                 
                                 if start_x is None or start_y is None:
                                     continue
                                 
+                                # Oyuncu pozisyonlarını topla
                                 if player not in player_positions:
                                     player_positions[player] = {'x': [], 'y': [], 'total_passes': 0}
                                 player_positions[player]['x'].append(start_x)
                                 player_positions[player]['y'].append(start_y)
                                 player_positions[player]['total_passes'] += 1
                                 
-                                # --- Güvenli hedef oyuncu okuma ---
+                                # --- PAS ALICIYI (RECIPIENT) BUL ---
+                                recipient = None
                                 pass_data = row.get('pass', {})
                                 if isinstance(pass_data, dict):
-                                    recipient_data = pass_data.get('recipient', {})
-                                    if isinstance(recipient_data, dict):
-                                        recipient = recipient_data.get('name', None)
-                                    else:
-                                        recipient = str(recipient_data) if recipient_data else None
-                                else:
-                                    recipient = None
+                                    # Önce 'recipient' anahtarını dene
+                                    if 'recipient' in pass_data:
+                                        rec_data = pass_data['recipient']
+                                        if isinstance(rec_data, dict):
+                                            recipient = rec_data.get('name', None)
+                                        else:
+                                            recipient = str(rec_data) if rec_data else None
+                                    # 'recipient' yoksa 'recipient_id' dene
+                                    elif 'recipient_id' in pass_data:
+                                        rec_id = pass_data['recipient_id']
+                                        # ID'den isim bulmak için pas verisindeki 'recipient_name' olabilir
+                                        if 'recipient_name' in pass_data:
+                                            recipient = pass_data['recipient_name']
+                                        else:
+                                            recipient = f"Oyuncu_{rec_id}"
                                 
                                 if recipient:
                                     key = tuple(sorted([player, recipient]))
@@ -341,7 +362,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                         player_passes[key] = 0
                                     player_passes[key] += 1
                             
-                            # En az 5 pas yapan oyuncuları filtrele (daha iyi görsel için)
+                            # --- FİLTRELEME: En az 5 pas yapan oyuncular ---
                             active_players = [p for p, data in player_positions.items() 
                                              if data['total_passes'] >= 5]
                             
@@ -357,16 +378,18 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                         'total_passes': data['total_passes']
                                     }
                                 
-                                # En az 3 bağlantıyı göster
+                                # En az 2 pas bağlantısı olanları göster
                                 pass_connections = {k: v for k, v in player_passes.items() 
-                                                    if k[0] in active_players and k[1] in active_players and v >= 3}
+                                                    if k[0] in active_players and k[1] in active_players and v >= 2}
                                 
                                 if not pass_connections:
-                                    st.warning("Yeterli pas bağlantısı yok (en az 3 pas).")
+                                    st.warning("Yeterli pas bağlantısı yok (en az 2 pas).")
                                 else:
+                                    # Pas ağını çiz
                                     pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
                                     fig, ax = pitch.draw(figsize=(12, 8))
                                     
+                                    # Oyuncuları yerleştir
                                     for player, pos in positions.items():
                                         x = pos['x']
                                         y = pos['y']
@@ -374,6 +397,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                         ax.scatter(x, y, s=size, color='#00ffcc', edgecolors='white', zorder=5, alpha=0.8)
                                         ax.text(x, y-3, player, color='white', ha='center', fontsize=8, fontweight='bold')
                                     
+                                    # Pas bağlantılarını çiz
                                     for (p1, p2), count in pass_connections.items():
                                         if p1 in positions and p2 in positions:
                                             x1 = positions[p1]['x']
