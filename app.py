@@ -14,15 +14,34 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-st.markdown("""
+bg_image_url = "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
+
+st.markdown(f"""
 <style>
-    .stApp {
-        background-color: #0a0a0a;
-    }
-    h1, h2, h3, h4, p, div, span, label {
+    .stApp {{
+        background-image: url("{bg_image_url}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
+    .stApp::before {{
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.75);
+        z-index: 0;
+    }}
+    .stApp > div {{
+        position: relative;
+        z-index: 1;
+    }}
+    h1, h2, h3, h4, p, div, span, label {{
         color: white !important;
-    }
-    .stButton > button {
+    }}
+    .stButton > button {{
         background-color: #f5a623 !important;
         color: #1a1a1a !important;
         border: none !important;
@@ -31,12 +50,12 @@ st.markdown("""
         font-weight: bold !important;
         font-size: 16px !important;
         transition: all 0.3s ease !important;
-    }
-    .stButton > button:hover {
+    }}
+    .stButton > button:hover {{
         transform: scale(1.05) !important;
         background-color: #ffb347 !important;
-    }
-    .quick-btn > button {
+    }}
+    .quick-btn > button {{
         background-color: rgba(255, 255, 255, 0.15) !important;
         color: white !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -45,37 +64,37 @@ st.markdown("""
         font-size: 14px !important;
         backdrop-filter: blur(10px) !important;
         box-shadow: none !important;
-    }
-    .quick-btn > button:hover {
+    }}
+    .quick-btn > button:hover {{
         background-color: rgba(245, 166, 35, 0.3) !important;
         border-color: #f5a623 !important;
-    }
-    .feature-card {
+    }}
+    .feature-card {{
         background: rgba(255, 255, 255, 0.05) !important;
         border-radius: 16px !important;
         padding: 20px !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         text-align: center !important;
         transition: all 0.3s ease !important;
-    }
-    .feature-card:hover {
+    }}
+    .feature-card:hover {{
         transform: translateY(-5px) !important;
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: #f5a623 !important;
-    }
-    .match-card {
+    }}
+    .match-card {{
         background: rgba(0, 0, 0, 0.4) !important;
         border-radius: 12px !important;
         padding: 12px 20px !important;
         border-left: 4px solid #f5a623 !important;
         margin-bottom: 10px !important;
-    }
-    .league-card {
+    }}
+    .league-card {{
         background: rgba(0, 0, 0, 0.3) !important;
         border-radius: 12px !important;
         padding: 15px !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -87,49 +106,49 @@ if st.session_state['page'] == 'home':
     st.markdown("""
         <div style='text-align: center; padding: 20px 0 10px 0;'>
             <h1 style='font-size: 60px; font-weight: 900; color: #f5a623; text-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);'>
-                🦅 EAGLE PRO
+                EAGLE PRO
             </h1>
             <p style='font-size: 22px; color: #e0e0e0; margin-top: -10px;'>
                 AI Futbol Analiz ve Tahmin
             </p>
             <p style='font-size: 16px; color: #b0b0b0;'>
-                Veriyle Konuşan Analiz | 40+ Lig | Yapay Zeka Tahmin
+                Veriyle Konusan Analiz | 40+ Lig | Yapay Zeka Tahmin
             </p>
         </div>
     """, unsafe_allow_html=True)
 
     st.divider()
 
-    st.markdown("### ⚡ Hizli Erisim")
+    st.markdown("### Hizli Erisim")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        if st.button("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier Lig", key="quick_pl"):
+        if st.button("Premier Lig", key="quick_pl"):
             st.session_state['quick_league'] = "Premier League"
             st.session_state['page'] = 'analysis'
             st.rerun()
     with col2:
-        if st.button("🇪🇸 La Liga", key="quick_ll"):
+        if st.button("La Liga", key="quick_ll"):
             st.session_state['quick_league'] = "La Liga"
             st.session_state['page'] = 'analysis'
             st.rerun()
     with col3:
-        if st.button("🇩🇪 Bundesliga", key="quick_bund"):
+        if st.button("Bundesliga", key="quick_bund"):
             st.session_state['quick_league'] = "Bundesliga"
             st.session_state['page'] = 'analysis'
             st.rerun()
     with col4:
-        if st.button("🏆 Şampiyonlar Ligi", key="quick_ucl"):
-            st.session_state['quick_league'] = "Şampiyonlar Ligi"
+        if st.button("Sampiyonlar Ligi", key="quick_ucl"):
+            st.session_state['quick_league'] = "Sampiyonlar Ligi"
             st.session_state['page'] = 'analysis'
             st.rerun()
 
     st.divider()
 
-    st.markdown("### 📅 Bugünün Maçları")
+    st.markdown("### Bugunun Maclari")
     sample_matches = [
         {"home": "Arsenal", "away": "Chelsea", "time": "19:30"},
         {"home": "Real Madrid", "away": "Barcelona", "time": "22:00"},
-        {"home": "Bayern Münih", "away": "Dortmund", "time": "20:30"},
+        {"home": "Bayern Munih", "away": "Dortmund", "time": "20:30"},
         {"home": "Milan", "away": "Inter", "time": "21:45"},
         {"home": "PSG", "away": "Marseille", "time": "20:00"},
     ]
@@ -143,26 +162,26 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    st.markdown("### 📊 Lig Ozetleri")
+    st.markdown("### Lig Ozetleri")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("""
             <div class="league-card">
-                <h4 style='color: #f5a623;'>🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</h4>
+                <h4 style='color: #f5a623;'>Premier League</h4>
                 <p>1. Liverpool (78p)<br>2. Arsenal (74p)<br>3. Manchester City (71p)</p>
             </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
             <div class="league-card">
-                <h4 style='color: #f5a623;'>🇪🇸 La Liga</h4>
+                <h4 style='color: #f5a623;'>La Liga</h4>
                 <p>1. Real Madrid (76p)<br>2. Barcelona (72p)<br>3. Atletico Madrid (68p)</p>
             </div>
         """, unsafe_allow_html=True)
 
     st.divider()
 
-    st.markdown("### 🧠 Eagle Pro ile Neler Yapabilirsin?")
+    st.markdown("### Eagle Pro ile Neler Yapabilirsin?")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("""
@@ -184,7 +203,7 @@ if st.session_state['page'] == 'home':
         st.markdown("""
             <div class="feature-card">
                 <h3 style='font-size: 36px;'>📈</h3>
-                <h4>Takım Stili</h4>
+                <h4>Takim Stili</h4>
                 <p style='font-size: 13px; color: #ccc;'>Pres, top kapma, pas stili analizi</p>
             </div>
         """, unsafe_allow_html=True)
@@ -193,7 +212,7 @@ if st.session_state['page'] == 'home':
             <div class="feature-card">
                 <h3 style='font-size: 36px;'>🤖</h3>
                 <h4>AI Tahmin</h4>
-                <p style='font-size: 13px; color: #ccc;'>XGBoost ile maç sonucu tahmini</p>
+                <p style='font-size: 13px; color: #ccc;'>XGBoost ile mac sonucu tahmini</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -201,7 +220,7 @@ if st.session_state['page'] == 'home':
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Kesfetmeye Basla", use_container_width=True):
+        if st.button("Kesfetmeye Basla", use_container_width=True):
             st.session_state['page'] = 'analysis'
             st.rerun()
 
@@ -258,19 +277,19 @@ else:
 
     ALL_LEAGUES = sorted(set(list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]))
 
-    st.title("🦅 Eagle Pro - AI Futbol Analiz ve Tahmin")
+    st.title("Eagle Pro - AI Futbol Analiz ve Tahmin")
     st.markdown("### Top 30+ Lig, 2. Ligler, Kupalar, UEFA & FIFA - Veriyle Konusan Analiz")
 
-    if st.button("🏠 Ana Sayfaya Don"):
+    if st.button("Ana Sayfaya Don"):
         st.session_state['page'] = 'home'
         st.rerun()
 
     if default_league in ALL_LEAGUES:
-        league_name = st.selectbox("🏆 Lig/Turnuva Sec", ALL_LEAGUES, index=ALL_LEAGUES.index(default_league))
+        league_name = st.selectbox("Lig/Turnuva Sec", ALL_LEAGUES, index=ALL_LEAGUES.index(default_league))
     else:
-        league_name = st.selectbox("🏆 Lig/Turnuva Sec", ALL_LEAGUES)
+        league_name = st.selectbox("Lig/Turnuva Sec", ALL_LEAGUES)
 
-    if st.button("📊 Puan Durumunu Goster"):
+    if st.button("Puan Durumunu Goster"):
         with st.spinner("Veri cekiliyor..."):
             if league_name in LEAGUE_CODES:
                 league_code = LEAGUE_CODES[league_name]
@@ -365,7 +384,7 @@ else:
             "Bundesliga": "Bundesliga", "Serie A": "Serie_A",
             "Ligue 1": "Ligue_1"
         }
-        if st.button("⚡ xG/xA Verileri (Understat)"):
+        if st.button("xG/xA Verileri (Understat)"):
             with st.spinner("Understat'ten xG verileri cekiliyor..."):
                 xg_df = get_xg_from_understat(understat_mapping[league_name], "2024")
                 if not xg_df.empty:
@@ -373,7 +392,7 @@ else:
                 else:
                     st.warning("xG verisi alinamadi.")
 
-    if st.button("📈 Takım Istatistikleri (FBref)"):
+    if st.button("Takim Istatistikleri (FBref)"):
         with st.spinner("Veri cekiliyor (sports-skills uzerinden)..."):
             for season in ["2024", "2023"]:
                 df = get_fbref_team_stats(league_name, season)
@@ -400,10 +419,10 @@ else:
                 st.error("Hicbir sezon icin veri alinamadi.")
 
     st.markdown("---")
-    st.subheader("🧪 sports-skills Test Alani")
+    st.subheader("sports-skills Test Alani")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🏆 Premier League Puan Durumu (sports-skills)"):
+        if st.button("Premier League Puan Durumu (sports-skills)"):
             with st.spinner("sports-skills'ten veri cekiliyor..."):
                 data = get_ss_standings("premier-league-2024")
                 if data:
@@ -452,7 +471,7 @@ else:
                 else:
                     st.error("Veri alinamadi.")
     with col2:
-        if st.button("🔎 Takim Ara (Arsenal)"):
+        if st.button("Takim Ara (Arsenal)"):
             with st.spinner("Takim profili araniyor..."):
                 team = get_ss_team_profile("arsenal")
                 if team:
@@ -461,7 +480,7 @@ else:
                     st.error("Takim bulunamadi.")
 
     st.markdown("---")
-    st.subheader("⚽ StatsBomb Olay Bazli Veri (Acik Veri)")
+    st.subheader("StatsBomb Olay Bazli Veri (Acik Veri)")
     TOURNAMENTS = {
         "FIFA Dunya Kupasi 2022": {"competition_id": 43, "season_id": 106},
         "UEFA Sampiyonlar Ligi 2021-22": {"competition_id": 16, "season_id": 4},
@@ -477,12 +496,12 @@ else:
         "Ligue 1 2021-22": {"competition_id": 7, "season_id": 4},
         "Ligue 1 2022-23": {"competition_id": 7, "season_id": 14},
     }
-    selected_tournament = st.selectbox("🏆 Turnuva Sec", list(TOURNAMENTS.keys()))
+    selected_tournament = st.selectbox("Turnuva Sec", list(TOURNAMENTS.keys()))
     tournament_info = TOURNAMENTS[selected_tournament]
     competition_id = tournament_info["competition_id"]
     season_id = tournament_info["season_id"]
 
-    if st.button("📋 Maclari Listele"):
+    if st.button("Maclari Listele"):
         with st.spinner("StatsBomb'dan maclar cekiliyor..."):
             matches = get_statsbomb_matches(competition_id, season_id)
             if not matches.empty:
@@ -516,85 +535,85 @@ else:
     if 'match_options' in st.session_state and st.session_state['match_options']:
         match_options = st.session_state['match_options']
         selected_match_label = st.selectbox(
-            "📅 Mac Sec",
+            "Mac Sec",
             options=[m["display"] for m in match_options],
             key="sb_match_select"
         )
         selected_match = next(m for m in match_options if m["display"] == selected_match_label)
 
         st.markdown("---")
-        st.subheader("🧠 Eagle Pro - AI Tahmin Merkezi")
+        st.subheader("Eagle Pro - AI Tahmin Merkezi")
 
         col1, col2 = st.columns(2)
         with col1:
-            predict_1x2 = st.button("📊 1X2 Tahmini", key="predict_1x2")
-            predict_ht = st.button("⏱️ Ilk Yari Tahmini", key="predict_ht")
-            predict_btts = st.button("🤝 KG Var/Yok Tahmini", key="predict_btts")
+            predict_1x2 = st.button("1X2 Tahmini", key="predict_1x2")
+            predict_ht = st.button("Ilk Yari Tahmini", key="predict_ht")
+            predict_btts = st.button("KG Var/Yok Tahmini", key="predict_btts")
         with col2:
-            predict_over15 = st.button("⚽ Alt/Ust 1.5", key="predict_over15")
-            predict_over25 = st.button("⚽ Alt/Ust 2.5", key="predict_over25")
-            predict_over35 = st.button("⚽ Alt/Ust 3.5", key="predict_over35")
-            predict_ai = st.button("🦅 AI Yorumcu", key="predict_ai")
+            predict_over15 = st.button("Alt/Ust 1.5", key="predict_over15")
+            predict_over25 = st.button("Alt/Ust 2.5", key="predict_over25")
+            predict_over35 = st.button("Alt/Ust 3.5", key="predict_over35")
+            predict_ai = st.button("AI Yorumcu", key="predict_ai")
 
         if any([predict_1x2, predict_ht, predict_btts, predict_over15, predict_over25, predict_over35, predict_ai]):
-            st.info("🧪 Su an ornek verilerle tahmin yapilmaktadir. Gercek model entegrasyonu icin veri seti olusturuluyor.")
+            st.info("Su an ornek verilerle tahmin yapilmaktadir. Gercek model entegrasyonu icin veri seti olusturuluyor.")
 
-            st.subheader("📈 Tahmin Sonuclari")
+            st.subheader("Tahmin Sonuclari")
 
             if predict_1x2:
-                st.markdown("#### 📊 1X2 Mac Sonucu")
+                st.markdown("#### 1X2 Mac Sonucu")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("🏠 Ev Kazanir", "%68")
+                    st.metric("Ev Kazanir", "%68")
                 with col2:
-                    st.metric("🤝 Beraberlik", "%22")
+                    st.metric("Beraberlik", "%22")
                 with col3:
-                    st.metric("✈️ Deplasman Kazanir", "%10")
+                    st.metric("Deplasman Kazanir", "%10")
 
             if predict_ht:
-                st.markdown("#### ⏱️ Ilk Yari Sonucu")
+                st.markdown("#### Ilk Yari Sonucu")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("🏠 Ev Kazanir", "%45")
+                    st.metric("Ev Kazanir", "%45")
                 with col2:
-                    st.metric("🤝 Beraberlik", "%40")
+                    st.metric("Beraberlik", "%40")
                 with col3:
-                    st.metric("✈️ Deplasman Kazanir", "%15")
+                    st.metric("Deplasman Kazanir", "%15")
 
             if predict_btts:
-                st.markdown("#### 🤝 Karsilikli Gol (BTTS)")
+                st.markdown("#### Karsilikli Gol (BTTS)")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("✅ Evet (KG Var)", "%62")
+                    st.metric("Evet (KG Var)", "%62")
                 with col2:
-                    st.metric("❌ Hayir (KG Yok)", "%38")
+                    st.metric("Hayir (KG Yok)", "%38")
 
             if predict_over15:
-                st.markdown("#### ⚽ Alt/Ust 1.5")
+                st.markdown("#### Alt/Ust 1.5")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⬆️ Ust 1.5", "%78")
+                    st.metric("Ust 1.5", "%78")
                 with col2:
-                    st.metric("⬇️ Alt 1.5", "%22")
+                    st.metric("Alt 1.5", "%22")
 
             if predict_over25:
-                st.markdown("#### ⚽ Alt/Ust 2.5")
+                st.markdown("#### Alt/Ust 2.5")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⬆️ Ust 2.5", "%55")
+                    st.metric("Ust 2.5", "%55")
                 with col2:
-                    st.metric("⬇️ Alt 2.5", "%45")
+                    st.metric("Alt 2.5", "%45")
 
             if predict_over35:
-                st.markdown("#### ⚽ Alt/Ust 3.5")
+                st.markdown("#### Alt/Ust 3.5")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⬆️ Ust 3.5", "%30")
+                    st.metric("Ust 3.5", "%30")
                 with col2:
-                    st.metric("⬇️ Alt 3.5", "%70")
+                    st.metric("Alt 3.5", "%70")
 
             if predict_ai:
-                st.markdown("#### 🦅 AI Yorumcu")
+                st.markdown("#### AI Yorumcu")
                 commentary = generate_ai_commentary(
                     selected_match['home'],
                     selected_match['away'],
@@ -617,7 +636,7 @@ else:
                 )
                 st.markdown(commentary)
 
-        if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarini Goster", key="show_events"):
+        if st.button(f"{selected_match['home']} vs {selected_match['away']} Olaylarini Goster", key="show_events"):
             with st.spinner("Olaylar cekiliyor..."):
                 events = get_statsbomb_events(selected_match["match_id"])
                 if not events.empty:
@@ -627,7 +646,7 @@ else:
                     st.session_state['match_id'] = selected_match["match_id"]
                     event_types = events['type'].unique().tolist()
                     selected_types = st.multiselect(
-                        "🔍 Olay Turlerini Filtrele",
+                        "Olay Turlerini Filtrele",
                         options=event_types,
                         default=event_types[:5] if len(event_types) >= 5 else event_types,
                         key="event_types_filter"
@@ -637,7 +656,7 @@ else:
                         st.dataframe(filtered_events, use_container_width=True)
                     else:
                         st.dataframe(events, use_container_width=True)
-                    st.subheader("📊 Olay Ozeti")
+                    st.subheader("Olay Ozeti")
                     summary = events['type'].value_counts().reset_index()
                     summary.columns = ['Olay Turu', 'Sayi']
                     st.dataframe(summary, use_container_width=True)
@@ -648,11 +667,11 @@ else:
             st.info("Lutfen yukaridan bir turnuva secip 'Maclari Listele' butonuna tiklayin.")
 
     st.markdown("---")
-    st.subheader("🔗 Pas Agi Analizi (StatsBomb)")
+    st.subheader("Pas Agi Analizi (StatsBomb)")
     if 'selected_match' in st.session_state and st.session_state['selected_match']:
         selected_match = st.session_state['selected_match']
         match_id = st.session_state.get('match_id', None)
-        if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Agini Goster", key="show_pass_network"):
+        if st.button(f"{selected_match['home']} - {selected_match['away']} Pas Agini Goster", key="show_pass_network"):
             if not match_id:
                 st.warning("Once yukaridan bir mac secip 'Olaylari Goster' butonuna tiklayin.")
             else:
@@ -786,18 +805,18 @@ else:
                                 st.metric("En Cok Pas", most[0])
                     except Exception as e:
                         st.error(f"Pas agi olusturulurken hata: {str(e)}")
-                        with st.expander("🔍 Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
+                        with st.expander("Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
                             if 'events' in st.session_state:
                                 st.dataframe(st.session_state['events'].head(5))
     else:
         st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")
 
     st.markdown("---")
-    st.subheader("📋 Mac Ozet Raporu (StatsBomb)")
+    st.subheader("Mac Ozet Raporu (StatsBomb)")
     if 'selected_match' in st.session_state and st.session_state['selected_match']:
         selected_match = st.session_state['selected_match']
         match_id = st.session_state.get('match_id', None)
-        if st.button(f"📄 {selected_match['home']} - {selected_match['away']} Mac Ozet Raporu Olustur", key="generate_match_report"):
+        if st.button(f"{selected_match['home']} - {selected_match['away']} Mac Ozet Raporu Olustur", key="generate_match_report"):
             if not match_id:
                 st.warning("Once yukaridan bir mac secip 'Olaylari Goster' butonuna tiklayin.")
             else:
@@ -809,32 +828,32 @@ else:
                         if events.empty:
                             st.warning("Bu mac icin olay verisi bulunamadi.")
                             st.stop()
-                        st.subheader("📌 Mac Bilgileri")
+                        st.subheader("Mac Bilgileri")
                         col1, col2, col3 = st.columns(3)
                         with col1:
-                            st.metric("🏠 Ev Sahibi", selected_match['home'])
+                            st.metric("Ev Sahibi", selected_match['home'])
                         with col2:
-                            st.metric("✈️ Deplasman", selected_match['away'])
+                            st.metric("Deplasman", selected_match['away'])
                         with col3:
                             match_date = events['event_date'].iloc[0] if 'event_date' in events.columns else 'Tarih yok'
-                            st.metric("📅 Tarih", match_date[:10] if len(str(match_date)) > 10 else str(match_date))
+                            st.metric("Tarih", match_date[:10] if len(str(match_date)) > 10 else str(match_date))
                         st.divider()
-                        st.subheader("📊 Temel Istatistikler")
+                        st.subheader("Temel Istatistikler")
                         passes = events[events['type'] == 'Pass'].copy() if 'type' in events.columns else pd.DataFrame()
                         shots = events[events['type'] == 'Shot'].copy() if 'type' in events.columns else pd.DataFrame()
                         carries = events[events['type'] == 'Carry'].copy() if 'type' in events.columns else pd.DataFrame()
                         pressures = events[events['type'] == 'Pressure'].copy() if 'type' in events.columns else pd.DataFrame()
                         col1, col2, col3, col4 = st.columns(4)
                         with col1:
-                            st.metric("🔄 Toplam Pas", len(passes))
+                            st.metric("Toplam Pas", len(passes))
                         with col2:
-                            st.metric("🎯 Toplam Sut", len(shots))
+                            st.metric("Toplam Sut", len(shots))
                         with col3:
-                            st.metric("🔥 Pres Sayisi", len(pressures))
+                            st.metric("Pres Sayisi", len(pressures))
                         with col4:
-                            st.metric("🏃 Top Tasima", len(carries))
+                            st.metric("Top Tasima", len(carries))
                         st.divider()
-                        st.subheader("🎯 xG ve Sut Haritasi")
+                        st.subheader("xG ve Sut Haritasi")
                         if not shots.empty:
                             shot_xg = []
                             for idx, row in shots.iterrows():
@@ -850,9 +869,9 @@ else:
                                 total_xg = sum(shot_xg)
                                 col1, col2 = st.columns(2)
                                 with col1:
-                                    st.metric("⚡ Toplam xG", round(total_xg, 2))
+                                    st.metric("Toplam xG", round(total_xg, 2))
                                 with col2:
-                                    st.metric("📊 Ortalama xG/Sut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
+                                    st.metric("Ortalama xG/Sut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
                             from mplsoccer import Pitch
                             pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
                             fig, ax = pitch.draw(figsize=(10, 7))
@@ -876,7 +895,7 @@ else:
                         else:
                             st.info("Bu macta sut verisi bulunamadi.")
                         st.divider()
-                        st.subheader("🔗 Pas Agi")
+                        st.subheader("Pas Agi")
                         if not passes.empty:
                             import numpy as np
                             player_positions = {}
@@ -954,7 +973,7 @@ else:
                         else:
                             st.info("Bu macta pas verisi bulunamadi.")
                         st.divider()
-                        st.subheader("🏅 One Cikan Oyuncular")
+                        st.subheader("One Cikan Oyuncular")
                         if not passes.empty:
                             pass_counts_by_player = {}
                             for idx, row in passes.iterrows():
@@ -989,21 +1008,21 @@ else:
                                 st.write("**En Cok Sut Ceken Oyuncular**")
                                 df_shots = pd.DataFrame(top_shooters, columns=["Oyuncu", "Sut Sayisi"])
                                 st.dataframe(df_shots, use_container_width=True, hide_index=True)
-                        st.success("✅ Mac ozet raporu basariyla olusturuldu!")
+                        st.success("Mac ozet raporu basariyla olusturuldu!")
                     except Exception as e:
                         st.error(f"Rapor olusturulurken hata: {str(e)}")
-                        with st.expander("🔍 Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
+                        with st.expander("Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
                             if 'events' in st.session_state:
                                 st.dataframe(st.session_state['events'].head(5))
     else:
         st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")
 
     st.markdown("---")
-    st.subheader("📊 Takim Stili Analizi (StatsBomb)")
+    st.subheader("Takim Stili Analizi (StatsBomb)")
     if 'selected_match' in st.session_state and st.session_state['selected_match']:
         selected_match = st.session_state['selected_match']
         match_id = st.session_state.get('match_id', None)
-        if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Takim Stili Analizi", key="team_style_analysis"):
+        if st.button(f"{selected_match['home']} - {selected_match['away']} Takim Stili Analizi", key="team_style_analysis"):
             if not match_id:
                 st.warning("Once yukaridan bir mac secip 'Olaylari Goster' butonuna tiklayin.")
             else:
@@ -1093,7 +1112,7 @@ else:
                             return metrics
                         home_metrics = calculate_style_metrics(home_events, home_team)
                         away_metrics = calculate_style_metrics(away_events, away_team)
-                        st.subheader(f"⚽ {home_team} vs {away_team} - Stil Karsilastirmasi")
+                        st.subheader(f"{home_team} vs {away_team} - Stil Karsilastirmasi")
                         comparison_data = {
                             "Metrik": list(home_metrics.keys()),
                             home_team: list(home_metrics.values()),
@@ -1104,7 +1123,7 @@ else:
                         st.divider()
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.subheader(f"📍 {home_team} - Top Kapma Bolgeleri")
+                            st.subheader(f"{home_team} - Top Kapma Bolgeleri")
                             recovery_data = {
                                 'Bolge': ['Kendi Yari', 'Orta Saha', 'Rakip Yari'],
                                 'Sayi': [
@@ -1122,7 +1141,7 @@ else:
                             else:
                                 st.info("Top kapma verisi yok.")
                         with col2:
-                            st.subheader(f"📍 {away_team} - Top Kapma Bolgeleri")
+                            st.subheader(f"{away_team} - Top Kapma Bolgeleri")
                             recovery_data = {
                                 'Bolge': ['Kendi Yari', 'Orta Saha', 'Rakip Yari'],
                                 'Sayi': [
@@ -1140,7 +1159,7 @@ else:
                             else:
                                 st.info("Top kapma verisi yok.")
                         st.divider()
-                        st.subheader("🔥 Pres Yuksekligi Karsilastirmasi")
+                        st.subheader("Pres Yuksekligi Karsilastirmasi")
                         pres_data = {
                             'Takim': [home_team, away_team],
                             'Rakip Yari Sahada Pres Orani (%)': [
@@ -1157,7 +1176,7 @@ else:
                         for i, v in enumerate(df_pres['Rakip Yari Sahada Pres Orani (%)']):
                             ax.text(i, v + 2, f"{v}%", ha='center', color='white')
                         st.pyplot(fig)
-                        st.subheader("🎯 Pas Basari Orani Karsilastirmasi")
+                        st.subheader("Pas Basari Orani Karsilastirmasi")
                         pass_data = {
                             'Takim': [home_team, away_team],
                             'Pas Basari Orani (%)': [
@@ -1174,11 +1193,11 @@ else:
                         for i, v in enumerate(df_pass['Pas Basari Orani (%)']):
                             ax.text(i, v + 2, f"{v}%", ha='center', color='white')
                         st.pyplot(fig)
-                        st.success("✅ Takim stili analizi basariyla tamamlandi!")
+                        st.success("Takim stili analizi basariyla tamamlandi!")
                     except Exception as e:
                         st.error(f"Takim stili analizi sirasinda hata: {str(e)}")
-                        with st.expander("🔍 Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
+                        with st.expander("Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
                             if 'events' in st.session_state:
                                 st.dataframe(st.session_state['events'].head(5))
     else:
-        st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")
+        st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")            
