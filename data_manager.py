@@ -6,19 +6,13 @@ import json
 import os
 from datetime import datetime, timedelta
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
-import pickle
 
 # ==================== API ANAHTARLARI ====================
 API_KEY_FOOTBALL_DATA = os.environ.get("FOOTBALL_DATA_API_KEY", "683de67308df4cfcb2ef3051100bdc66")
 FOOTBALL_DATA_BASE = "https://api.football-data.org/v4"
 
-# Önbellek klasörü
 CACHE_DIR = "cache"
-MODEL_DIR = "models"
 os.makedirs(CACHE_DIR, exist_ok=True)
-os.makedirs(MODEL_DIR, exist_ok=True)
 
 # ==================== FOOTBALL-DATA.ORG ====================
 def football_data_request(endpoint):
@@ -51,7 +45,7 @@ def get_league_table(league_code):
             "SA": "serie-a", "FL1": "ligue-1", "ELC": "championship",
             "SD": "la-liga-2", "BL2": "bundesliga-2", "SB": "serie-b",
             "FL2": "ligue-2", "ED": "eredivisie", "PPL": "portugal-primeira-liga",
-            "SL": "süper-lig", "BLG": "belgian-pro-league", "SCO": "scottish-premiership",
+            "SL": "super-lig", "BLG": "belgian-pro-league", "SCO": "scottish-premiership",
             "AUT": "austrian-bundesliga", "SUI": "swiss-super-league",
             "GRE": "greek-super-league", "RUS": "russian-premier-league",
             "UKR": "ukrainian-premier-league", "DEN": "danish-superliga",
@@ -63,7 +57,7 @@ def get_league_table(league_code):
             "SVN": "slovenian-prvaliga", "IRL": "irish-premier-division",
         }
         ss_league = league_map.get(league_code, league_code.lower())
-        season_id = f"{ss_league}-2024"
+        season_id = f"{ss_league}-2025"
         result = football.get_season_standings(season_id=season_id)
         if result and "data" in result:
             with open(cache_file, "w") as f:
@@ -75,7 +69,7 @@ def get_league_table(league_code):
     return {"error": "Tüm kaynaklardan veri alınamadı."}
 
 # ==================== HİBRİT xG ====================
-def get_xg_from_understat(league, season):
+def get_xg_from_understat(league, season="2024"):
     try:
         understat = sd.Understat()
         df = understat.read_league_season(league=league, season=season)
@@ -108,41 +102,6 @@ def get_xg_from_understat(league, season):
     
     return pd.DataFrame()
 
-# ==================== HİBRİT FBREF ====================
-def get_fbref_team_stats(league, season):
-    from sports_skills import football
-    import pandas as pd
-    
-    league_map = {
-        "Premier League": "premier-league", "La Liga": "la-liga",
-        "Bundesliga": "bundesliga", "Serie A": "serie-a",
-        "Ligue 1": "ligue-1"
-    }
-    league_slug = league_map.get(league, league.lower().replace(" ", "-"))
-    season_id = f"{league_slug}-{season}"
-    
-    try:
-        fbref = sd.FBref(league, season)
-        df = fbref.read_team_season_stats(stat_type="standard")
-        if not df.empty:
-            return df
-    except:
-        pass
-    
-    try:
-        result = football.get_season_standings(season_id=season_id)
-        if result and "data" in result:
-            standings = result["data"].get("standings", [])
-            if standings:
-                first = standings[0]
-                entries = first.get("entries", first.get("table", []))
-                if entries:
-                    return pd.DataFrame(entries)
-    except:
-        pass
-    
-    return pd.DataFrame({"Hata": ["Tüm kaynaklardan veri alınamadı."]})
-
 # ==================== TAKIM FORMU ====================
 def get_team_recent_matches(team_id, league_code, limit=10):
     matches = get_team_matches(team_id, limit=limit)
@@ -160,7 +119,7 @@ def get_team_recent_matches(team_id, league_code, limit=10):
                     "SA": "serie-a", "FL1": "ligue-1",
                 }
                 ss_league = league_map.get(league_code, "premier-league")
-                season_id = f"{ss_league}-2024"
+                season_id = f"{ss_league}-2025"
                 result = football.get_season_fixtures(season_id=season_id)
                 if result and "data" in result:
                     fixtures = result["data"].get("fixtures", [])
@@ -273,189 +232,7 @@ def get_team_hybrid_form(team_id, league_code):
         'yediği_gol_avg_10': form_10.get('yediği_gol_avg', 0),
     }
 
-# ==================== TAHMİN MODELLERİ ====================
-def prepare_match_features(home_team_id, away_team_id, league_code):
-    home_form = get_team_hybrid_form(home_team_id, league_code)
-    away_form = get_team_hybrid_form(away_team_id, league_code)
-    
-    table_data = get_league_table(league_code)
-    home_rank = 0
-    away_rank = 0
-    home_points = 0
-    away_points = 0
-    if "standings" in table_data:
-        standings = table_data["standings"][0].get("table", [])
-        for team in standings:
-            if team["team"]["id"] == home_team_id:
-                home_rank = team["position"]
-                home_points = team["points"]
-            if team["team"]["id"] == away_team_id:
-                away_rank = team["position"]
-                away_points = team["points"]
-    
-    features = [
-        home_form['puan_avg_5'], home_form['puan_avg_10'],
-        home_form['xg_avg_5'], home_form['xg_avg_10'],
-        home_form['gol_avg_5'], home_form['gol_avg_10'],
-        home_form['yediği_gol_avg_5'], home_form['yediği_gol_avg_10'],
-        away_form['puan_avg_5'], away_form['puan_avg_10'],
-        away_form['xg_avg_5'], away_form['xg_avg_10'],
-        away_form['gol_avg_5'], away_form['gol_avg_10'],
-        away_form['yediği_gol_avg_5'], away_form['yediği_gol_avg_10'],
-        home_rank, away_rank, home_points, away_points,
-        home_form['puan_avg_5'] - away_form['puan_avg_5'],
-        home_form['xg_avg_5'] - away_form['xg_avg_5'],
-        home_points - away_points,
-        home_rank - away_rank,
-    ]
-    
-    return features
-
-def train_model(league_code, season="2024"):
-    # Örnek veri (gerçekte geçmiş maçlardan oluşturulmalı)
-    X = np.random.randn(200, 24)
-    y = np.random.randint(0, 3, 200)
-    
-    from sklearn.model_selection import train_test_split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
-    
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    
-    model_path = f"{MODEL_DIR}/{league_code}_model.pkl"
-    scaler_path = f"{MODEL_DIR}/{league_code}_scaler.pkl"
-    with open(model_path, 'wb') as f:
-        pickle.dump(model, f)
-    with open(scaler_path, 'wb') as f:
-        pickle.dump(scaler, f)
-    
-    return model, scaler
-
-def load_model(league_code):
-    model_path = f"{MODEL_DIR}/{league_code}_model.pkl"
-    scaler_path = f"{MODEL_DIR}/{league_code}_scaler.pkl"
-    if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        return None, None
-    with open(model_path, 'rb') as f:
-        model = pickle.load(f)
-    with open(scaler_path, 'rb') as f:
-        scaler = pickle.load(f)
-    return model, scaler
-
-def predict_match(home_team_id, away_team_id, league_code):
-    model, scaler = load_model(league_code)
-    if model is None:
-        return None, "Model bulunamadı. Önce modeli eğitin."
-    
-    features = prepare_match_features(home_team_id, away_team_id, league_code)
-    features = np.array(features).reshape(1, -1)
-    features = scaler.transform(features)
-    
-    prob = model.predict_proba(features)[0]
-    pred = model.predict(features)[0]
-    
-    result = {
-        'ev_sahibi_kazanma': round(prob[0] * 100, 2),
-        'beraberlik': round(prob[1] * 100, 2),
-        'deplasman_kazanma': round(prob[2] * 100, 2),
-        'tahmin': ['Ev Sahibi Kazanır', 'Beraberlik', 'Deplasman Kazanır'][pred]
-    }
-    return result, None
-
-def generate_ai_commentary(home_team, away_team, predictions, stats):
-    commentary = f"🦅 **Eagle Pro AI Yorumu**\n\n"
-    commentary += f"**{home_team} vs {away_team}** maçı için yapılan analizler şunları gösteriyor:\n\n"
-    
-    # Maç sonucu
-    if predictions.get('1X2'):
-        p = predictions['1X2']
-        commentary += f"🔮 **Maç Sonucu:** {p['tahmin']} (Ev {p['ev_sahibi_kazanma']}%, Beraberlik {p['beraberlik']}%, Deplasman {p['deplasman_kazanma']}%)\n\n"
-    
-    # İlk yarı
-    if predictions.get('HT'):
-        p = predictions['HT']
-        commentary += f"⏱️ **İlk Yarı:** {p['tahmin']} (Ev {p['ev_sahibi_kazanma']}%, Beraberlik {p['beraberlik']}%, Deplasman {p['deplasman_kazanma']}%)\n\n"
-    
-    # Alt/Üst
-    if predictions.get('over_under'):
-        ou = predictions['over_under']
-        commentary += f"⚽ **Gol Tahmini:**\n"
-        for key, val in ou.items():
-            commentary += f"   - {key}: {val['tahmin']} ({val['over']}% Üst, {val['under']}% Alt)\n"
-        commentary += "\n"
-    
-    # KG
-    if predictions.get('btts'):
-        bt = predictions['btts']
-        commentary += f"🤝 **Karşılıklı Gol:** {bt['tahmin']} (Evet {bt['evet']}%, Hayır {bt['hayir']}%)\n\n"
-    
-    # İstatistik özeti
-    commentary += f"📊 **Takım İstatistikleri:**\n"
-    commentary += f"   - {home_team}: Son 5 maç ort. {stats.get('home_form_5', 'N/A')} puan, xG {stats.get('home_xg_5', 'N/A')}\n"
-    commentary += f"   - {away_team}: Son 5 maç ort. {stats.get('away_form_5', 'N/A')} puan, xG {stats.get('away_xg_5', 'N/A')}\n\n"
-    
-    # Strateji
-    if predictions.get('1X2'):
-        p = predictions['1X2']
-        if p['ev_sahibi_kazanma'] > 50:
-            commentary += f"💡 **Strateji:** {home_team} avantajlı görünüyor. Ev sahibi takımın son formu ve xG verileri daha iyi. "
-        elif p['deplasman_kazanma'] > 50:
-            commentary += f"💡 **Strateji:** {away_team} deplasman avantajıyla öne çıkıyor. "
-        else:
-            commentary += f"💡 **Strateji:** İki takım da birbirine yakın. Beraberlik veya düşük farklı maç beklenebilir. "
-        
-        if predictions.get('btts') and predictions['btts']['evet'] > 55:
-            commentary += "Karşılıklı gol bekleniyor. "
-        elif predictions.get('btts') and predictions['btts']['hayir'] > 55:
-            commentary += "Karşılıklı gol beklentisi düşük. "
-    
-    commentary += "\n✅ Bu analiz verilere dayanmaktadır ve kesin sonuç garanti etmez. İyi şanslar! 🍀"
-    
-    return commentary
-
-# ==================== STATSBOMB ====================
-def get_statsbomb_matches(competition_id, season_id):
-    try:
-        matches = sb.matches(competition_id=competition_id, season_id=season_id)
-        return matches
-    except Exception as e:
-        return pd.DataFrame()
-
-def get_statsbomb_events(match_id):
-    try:
-        events = sb.events(match_id=match_id)
-        return events
-    except Exception as e:
-        return pd.DataFrame()
-
-# ==================== SPORTS-SKILLS ====================
-from sports_skills import football
-
-def get_ss_standings(season_id: str):
-    try:
-        result = football.get_season_standings(season_id=season_id)
-        if not result or "data" not in result:
-            return None
-        return result["data"]
-    except Exception as e:
-        print(f"sports-skills puan durumu hatası: {e}")
-        return None
-
-def get_ss_team_profile(team_id: str):
-    try:
-        result = football.get_team_profile(team_id=team_id)
-        if result and "data" in result:
-            return result["data"]
-        else:
-            return None
-    except Exception as e:
-        print(f"sports-skills takım profili hatası: {e}")
-        return None
-
+# ==================== TAKIM BİLGİLERİ ====================
 def get_team_matches(team_id, limit=10):
     cache_file = f"{CACHE_DIR}/team_matches_{team_id}.json"
     if os.path.exists(cache_file):
@@ -508,3 +285,110 @@ def get_team_info(team_id):
         pass
     
     return {"error": "Tüm kaynaklardan veri alınamadı."}
+
+# ==================== STATSBOMB ====================
+def get_statsbomb_matches(competition_id, season_id):
+    try:
+        matches = sb.matches(competition_id=competition_id, season_id=season_id)
+        return matches
+    except Exception as e:
+        return pd.DataFrame()
+
+def get_statsbomb_events(match_id):
+    try:
+        events = sb.events(match_id=match_id)
+        return events
+    except Exception as e:
+        return pd.DataFrame()
+
+# ==================== SPORTS-SKILLS ====================
+from sports_skills import football
+
+def get_ss_standings(season_id: str):
+    try:
+        result = football.get_season_standings(season_id=season_id)
+        if not result or "data" not in result:
+            return None
+        return result["data"]
+    except Exception as e:
+        print(f"sports-skills puan durumu hatası: {e}")
+        return None
+
+def get_ss_team_profile(team_id: str):
+    try:
+        result = football.get_team_profile(team_id=team_id)
+        if result and "data" in result:
+            return result["data"]
+        else:
+            return None
+    except Exception as e:
+        print(f"sports-skills takım profili hatası: {e}")
+        return None
+
+def get_ss_player_stats(player_id: str):
+    try:
+        result = football.get_player_stats(player_id=player_id)
+        if result and "data" in result:
+            return result["data"]
+        else:
+            return None
+    except Exception as e:
+        print(f"sports-skills oyuncu istatistikleri hatası: {e}")
+        return None
+
+def get_ss_player_market_value(tm_player_id: str):
+    try:
+        result = football.get_player_market_value(tm_player_id=tm_player_id)
+        if result and "data" in result:
+            return result["data"]
+        else:
+            return None
+    except Exception as e:
+        print(f"Transfermarkt hatası: {e}")
+        return None
+
+# ==================== AI YORUMCU ====================
+def generate_ai_commentary(home_team, away_team, predictions, stats):
+    commentary = f"🦅 **Eagle Pro AI Yorumu**\n\n"
+    commentary += f"**{home_team} vs {away_team}** maçı için yapılan analizler şunları gösteriyor:\n\n"
+    
+    if predictions.get('1X2'):
+        p = predictions['1X2']
+        commentary += f"🔮 **Maç Sonucu:** {p['tahmin']} (Ev {p['ev_sahibi_kazanma']}%, Beraberlik {p['beraberlik']}%, Deplasman {p['deplasman_kazanma']}%)\n\n"
+    
+    if predictions.get('HT'):
+        p = predictions['HT']
+        commentary += f"⏱️ **İlk Yarı:** {p['tahmin']} (Ev {p['ev_sahibi_kazanma']}%, Beraberlik {p['beraberlik']}%, Deplasman {p['deplasman_kazanma']}%)\n\n"
+    
+    if predictions.get('over_under'):
+        ou = predictions['over_under']
+        commentary += f"⚽ **Gol Tahmini:**\n"
+        for key, val in ou.items():
+            commentary += f"   - {key}: {val['tahmin']} ({val['over']}% Üst, {val['under']}% Alt)\n"
+        commentary += "\n"
+    
+    if predictions.get('btts'):
+        bt = predictions['btts']
+        commentary += f"🤝 **Karşılıklı Gol:** {bt['tahmin']} (Evet {bt['evet']}%, Hayır {bt['hayir']}%)\n\n"
+    
+    commentary += f"📊 **Takım İstatistikleri:**\n"
+    commentary += f"   - {home_team}: Son 5 maç ort. {stats.get('home_form_5', 'N/A')} puan, xG {stats.get('home_xg_5', 'N/A')}\n"
+    commentary += f"   - {away_team}: Son 5 maç ort. {stats.get('away_form_5', 'N/A')} puan, xG {stats.get('away_xg_5', 'N/A')}\n\n"
+    
+    if predictions.get('1X2'):
+        p = predictions['1X2']
+        if p['ev_sahibi_kazanma'] > 50:
+            commentary += f"💡 **Strateji:** {home_team} avantajlı görünüyor. "
+        elif p['deplasman_kazanma'] > 50:
+            commentary += f"💡 **Strateji:** {away_team} deplasman avantajıyla öne çıkıyor. "
+        else:
+            commentary += f"💡 **Strateji:** İki takım da birbirine yakın. Beraberlik veya düşük farklı maç beklenebilir. "
+        
+        if predictions.get('btts') and predictions['btts']['evet'] > 55:
+            commentary += "Karşılıklı gol bekleniyor. "
+        elif predictions.get('btts') and predictions['btts']['hayir'] > 55:
+            commentary += "Karşılıklı gol beklentisi düşük. "
+    
+    commentary += "\n✅ Bu analiz verilere dayanmaktadır ve kesin sonuç garanti etmez. İyi şanslar! 🍀"
+    
+    return commentary
