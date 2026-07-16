@@ -367,6 +367,123 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                         'x': np.mean(data['x']),
                                         'y': np.mean(data['y']),
                                         'total': data['total']
+
+# ==================== PAS AĞI GÖRSELLEŞTİRME (SON VERSİYON - HATASIZ) ====================
+st.markdown("---")
+st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
+
+if 'selected_match' in st.session_state and st.session_state['selected_match']:
+    selected_match = st.session_state['selected_match']
+    match_id = st.session_state.get('match_id', None)
+    
+    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_network"):
+        if not match_id:
+            st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
+        else:
+            with st.spinner("Pas verileri işleniyor..."):
+                try:
+                    events = st.session_state.get('events', None)
+                    if events is None or events.empty:
+                        events = get_statsbomb_events(match_id)
+                    
+                    if events.empty:
+                        st.warning("Bu maç için olay verisi bulunamadı.")
+                    else:
+                        # Hata ayıklama: sütunları göster
+                        with st.expander("🔍 Sütunlar (Hata Ayıklama)"):
+                            st.write(events.columns.tolist())
+                        
+                        # Pas olaylarını filtrele - 'type' sütunundan
+                        if 'type' in events.columns:
+                            passes = events[events['type'] == 'Pass'].copy()
+                        else:
+                            st.warning("'type' sütunu bulunamadı.")
+                            passes = pd.DataFrame()
+                        
+                        if passes.empty:
+                            st.warning("Bu maçta pas verisi bulunamadı.")
+                        else:
+                            import numpy as np
+                            from mplsoccer import Pitch
+                            
+                            player_positions = {}
+                            pass_counts = {}
+                            
+                            for idx, row in passes.iterrows():
+                                # Oyuncu adını bul (çoklu format desteği)
+                                player = None
+                                # 'player' sütunu dict ise
+                                if 'player' in row and isinstance(row['player'], dict):
+                                    player = row['player'].get('name', None)
+                                # 'player_name' sütunu varsa
+                                elif 'player_name' in row:
+                                    player = row['player_name']
+                                # 'player' sütunu string ise
+                                elif 'player' in row and isinstance(row['player'], str):
+                                    player = row['player']
+                                # 'player_id' varsa
+                                elif 'player_id' in row:
+                                    player = f"P{row['player_id']}"
+                                
+                                if not player:
+                                    continue
+                                
+                                # Konum bilgisi ('location' sütunu)
+                                if 'location' in row:
+                                    loc = row['location']
+                                    if isinstance(loc, list) and len(loc) >= 2:
+                                        x, y = loc[0], loc[1]
+                                    else:
+                                        continue
+                                else:
+                                    continue
+                                
+                                if x is None or y is None:
+                                    continue
+                                
+                                # Oyuncu pozisyonlarını güncelle
+                                if player not in player_positions:
+                                    player_positions[player] = {'x': [], 'y': [], 'total': 0}
+                                player_positions[player]['x'].append(x)
+                                player_positions[player]['y'].append(y)
+                                player_positions[player]['total'] += 1
+                                
+                                # Pas alıcısını bul
+                                recipient = None
+                                # 'pass' sütunu dict ise
+                                if 'pass' in row and isinstance(row['pass'], dict):
+                                    pdata = row['pass']
+                                    if 'recipient' in pdata and isinstance(pdata['recipient'], dict):
+                                        recipient = pdata['recipient'].get('name', None)
+                                    elif 'recipient_name' in pdata:
+                                        recipient = pdata['recipient_name']
+                                    elif 'recipient' in pdata and isinstance(pdata['recipient'], str):
+                                        recipient = pdata['recipient']
+                                # 'pass_recipient' sütunu varsa
+                                elif 'pass_recipient' in row:
+                                    recipient = row['pass_recipient']
+                                elif 'recipient' in row:
+                                    recipient = row['recipient']
+                                
+                                if recipient and recipient != player:
+                                    key = tuple(sorted([player, recipient]))
+                                    if key not in pass_counts:
+                                        pass_counts[key] = 0
+                                    pass_counts[key] += 1
+                            
+                            # En az 3 pas yapan oyuncuları al
+                            active = [p for p, data in player_positions.items() if data['total'] >= 3]
+                            if len(active) < 2:
+                                st.warning(f"Yeterli pas verisi yok (en az 3 pas yapan {len(active)} oyuncu bulundu, 2 gerekli).")
+                            else:
+                                # Pozisyon ortalamalarını hesapla
+                                positions = {}
+                                for p in active:
+                                    data = player_positions[p]
+                                    positions[p] = {
+                                        'x': np.mean(data['x']),
+                                        'y': np.mean(data['y']),
+                                        'total': data['total']
                                     }
                                 
                                 # En az 2 pas olan bağlantıları al
@@ -375,9 +492,9 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                 
                                 if not connections:
                                     st.warning("Yeterli pas bağlantısı yok (en az 2 pas olan bağlantı bulunamadı).")
-                                    # Hata ayıklama: ham veriyi göster
+                                    # Hata ayıklama: ilk 10 pası göster
                                     with st.expander("🔍 Ham Pas Verisi (İlk 10)"):
-                                        st.dataframe(passes[['player', 'pass']].head(10))
+                                        st.dataframe(passes[['player', 'location', 'pass']].head(10) if 'player' in passes.columns and 'location' in passes.columns and 'pass' in passes.columns else passes.head(10))
                                 else:
                                     # Pas ağını çiz
                                     pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
