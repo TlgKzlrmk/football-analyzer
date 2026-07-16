@@ -1,5 +1,299 @@
 import streamlit as st
 import pandas as pd
+import requests
+from datetime import datetime, timedelta
+from data_manager import *
+
+# ==================== SAYFA YAPILANDIRMASI ====================
+st.set_page_config(
+    page_title="Eagle Pro - AI Futbol Analiz",
+    page_icon="🦅",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ==================== ARKA PLAN GÖRSELİ (BEŞİKTAŞ STADI + DENİZ) ====================
+# NOT: Bu görseli kendi görselinle değiştirebilirsin.
+# Örnek: "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
+# Veya kendi yüklediğin bir görselin URL'sini kullan.
+bg_image_url = "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
+
+page_bg_img = f'''
+<style>
+.stApp {{
+    background-image: url("{bg_image_url}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}}
+
+/* Arka plan üzerine yarı saydam katman */
+.stApp::before {{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 0;
+}}
+
+/* Tüm içeriği üstte tut */
+.stApp > div {{
+    position: relative;
+    z-index: 1;
+}}
+
+/* Başlık ve metin renkleri */
+h1, h2, h3, h4, p, div, span {{
+    color: white !important;
+}}
+
+/* Buton stilleri */
+.stButton > button {{
+    background-color: #f5a623 !important;
+    color: #1a1a1a !important;
+    border: none !important;
+    border-radius: 30px !important;
+    padding: 12px 30px !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4) !important;
+}}
+
+.stButton > button:hover {{
+    transform: scale(1.05) !important;
+    background-color: #ffb347 !important;
+    box-shadow: 0 6px 20px rgba(245, 166, 35, 0.6) !important;
+}}
+
+/* Hızlı erişim butonları için özel */
+.quick-btn > button {{
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 20px !important;
+    padding: 8px 20px !important;
+    font-size: 14px !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: none !important;
+}}
+
+.quick-btn > button:hover {{
+    background-color: rgba(245, 166, 35, 0.3) !important;
+    border-color: #f5a623 !important;
+    transform: scale(1.02) !important;
+}}
+
+/* Özellik kartları */
+.feature-card {{
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+}}
+
+.feature-card:hover {{
+    transform: translateY(-5px) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: #f5a623 !important;
+}}
+
+/* Maç kartı */
+.match-card {{
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(5px) !important;
+    border-radius: 12px !important;
+    padding: 12px 20px !important;
+    border-left: 4px solid #f5a623 !important;
+    margin-bottom: 10px !important;
+}}
+
+/* Lig özeti kartı */
+.league-card {{
+    background: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(5px) !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}}
+</style>
+'''
+
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
+# ==================== KARŞILAMA EKRANI İÇERİĞİ ====================
+
+# Üst banner
+col1, col2, col3 = st.columns([1, 3, 1])
+with col2:
+    st.markdown("""
+        <div style='text-align: center; padding: 20px 0 10px 0;'>
+            <h1 style='font-size: 60px; font-weight: 900; color: #f5a623; text-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);'>
+                🦅 EAGLE PRO
+            </h1>
+            <p style='font-size: 22px; color: #e0e0e0; margin-top: -10px;'>
+                AI Futbol Analiz ve Tahmin
+            </p>
+            <p style='font-size: 16px; color: #b0b0b0;'>
+                Veriyle Konuşan Analiz | 40+ Lig | Yapay Zeka Tahmin
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# ==================== HIZLI ERİŞİM BUTONLARI ====================
+st.markdown("### ⚡ Hızlı Erişim")
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
+    if st.button("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier Lig", key="quick_pl"):
+        st.session_state['quick_league'] = "Premier League"
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col2:
+    st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
+    if st.button("🇪🇸 La Liga", key="quick_ll"):
+        st.session_state['quick_league'] = "La Liga"
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col3:
+    st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
+    if st.button("🇩🇪 Bundesliga", key="quick_bund"):
+        st.session_state['quick_league'] = "Bundesliga"
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col4:
+    st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
+    if st.button("🏆 Şampiyonlar Ligi", key="quick_ucl"):
+        st.session_state['quick_league'] = "Şampiyonlar Ligi"
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.divider()
+
+# ==================== BUGÜNÜN MAÇLARI ====================
+st.markdown("### 📅 Bugünün Maçları")
+
+try:
+    # Football-Data.org veya sports-skills'ten bugünün maçlarını çek
+    today = datetime.now().strftime("%Y-%m-%d")
+    # Örnek: Premier League maçlarını göster
+    matches = get_team_matches(None, limit=5)  # Daha sağlıklı bir fonksiyon yazılabilir
+    # Şimdilik örnek veri
+    sample_matches = [
+        {"home": "Arsenal", "away": "Chelsea", "time": "19:30"},
+        {"home": "Real Madrid", "away": "Barcelona", "time": "22:00"},
+        {"home": "Bayern Münih", "away": "Dortmund", "time": "20:30"},
+        {"home": "Milan", "away": "Inter", "time": "21:45"},
+        {"home": "PSG", "away": "Marseille", "time": "20:00"},
+    ]
+    for m in sample_matches:
+        st.markdown(f"""
+            <div class="match-card">
+                <span style='font-size: 18px; font-weight: bold;'>{m['home']} vs {m['away']}</span>
+                <span style='float: right; color: #f5a623; font-weight: bold;'>{m['time']}</span>
+            </div>
+        """, unsafe_allow_html=True)
+except:
+    st.info("Bugünün maç listesi şu anda hazırlanıyor. Lütfen daha sonra tekrar kontrol edin.")
+
+st.divider()
+
+# ==================== LİG ÖZETLERİ ====================
+st.markdown("### 📊 Lig Özetleri")
+
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("""
+        <div class="league-card">
+            <h4 style='color: #f5a623;'>🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</h4>
+            <p>1. Liverpool (78p)<br>2. Arsenal (74p)<br>3. Manchester City (71p)</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+        <div class="league-card">
+            <h4 style='color: #f5a623;'>🇪🇸 La Liga</h4>
+            <p>1. Real Madrid (76p)<br>2. Barcelona (72p)<br>3. Atletico Madrid (68p)</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# ==================== EAGLE PRO ÖZELLİKLERİ ====================
+st.markdown("### 🧠 Eagle Pro ile Neler Yapabilirsin?")
+
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.markdown("""
+        <div class="feature-card">
+            <h3 style='font-size: 36px;'>📊</h3>
+            <h4>40+ Lig</h4>
+            <p style='font-size: 13px; color: #ccc;'>Avrupa'dan 40'tan fazla lig ve turnuva</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+        <div class="feature-card">
+            <h3 style='font-size: 36px;'>🎯</h3>
+            <h4>xG & Olay Verisi</h4>
+            <p style='font-size: 13px; color: #ccc;'>Beklenen gol, pas ağı, şut haritası</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+        <div class="feature-card">
+            <h3 style='font-size: 36px;'>📈</h3>
+            <h4>Takım Stili</h4>
+            <p style='font-size: 13px; color: #ccc;'>Pres, top kapma, pas stili analizi</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    st.markdown("""
+        <div class="feature-card">
+            <h3 style='font-size: 36px;'>🤖</h3>
+            <h4>AI Tahmin</h4>
+            <p style='font-size: 13px; color: #ccc;'>XGBoost ile maç sonucu tahmini</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# ==================== KEŞFET BUTONU ====================
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("🚀 Keşfetmeye Başla", use_container_width=True):
+        st.session_state['page'] = 'analysis'
+        st.rerun()
+
+# ==================== SESSION STATE YÖNETİMİ ====================
+# Eğer 'page' anahtarı yoksa veya 'home' ise karşılama ekranı gösterilir.
+# Eğer 'analysis' ise mevcut analiz kodları çalışır.
+if 'page' not in st.session_state:
+    st.session_state['page'] = 'home'
+
+if st.session_state.get('page') == 'analysis':
+    # Buraya mevcut app.py kodlarını (lig seçimi, butonlar, vs.) ekleyebilirsin.
+    # Aşağıda örnek bir geçiş mesajı var.
+    st.success("✅ Eagle Pro Analiz Ekranına Hoş Geldin!")
+    st.info("Buraya mevcut analiz kodlarını (lig seçimi, puan durumu, vs.) ekleyebilirsin.")
+    # Eğer tüm kodları buraya taşırsan, karşılama ekranı ile analiz ekranı arasında geçiş yapabilirsin.
+else:
+    # Karşılama ekranı gösteriliyor (yukarıdaki tüm içerik)
+    pass
+
+import streamlit as st
+import pandas as pd
 import matplotlib.pyplot as plt
 from data_manager import *
 import os
