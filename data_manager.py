@@ -160,3 +160,35 @@ def get_ss_player_stats(player_id: str):
     except Exception as e:
         print(f"sports-skills oyuncu istatistikleri hatası: {e}")
         return None
+
+# ==================== Bzziro Sports Data (BSD) ENTEGRASYONU ====================
+import requests
+import os
+
+# BSD API anahtarını Streamlit Cloud'daki secrets'tan al
+BZZOIRO_API_KEY = os.environ.get("BZZOIRO_API_KEY", "your_bsd_api_key_here")
+BZZOIRO_BASE_URL = "https://sports.bzzoiro.com/api/v1"  # Muhtemel base URL
+
+def get_bsd_live_matches():
+    """BSD'den günün canlı maçlarını ve oranlarını çeker."""
+    url = f"{BZZOIRO_BASE_URL}/live"  # Muhtemel endpoint
+    headers = {"X-API-Key": BZZOIRO_API_KEY}
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f"BSD Canlı Maç hatası: {e}")
+        return None
+
+def get_bsd_match_odds(match_id):
+    """BSD'den belirli bir maçın bahis oranlarını çeker."""
+    url = f"{BZZOIRO_BASE_URL}/odds/{match_id}"  # Muhtemel endpoint
+    headers = {"X-API-Key": BZZOIRO_API_KEY}
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f"BSD Maç Oranları hatası: {e}")
+        return None
