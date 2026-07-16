@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 import requests
 import numpy as np
 
-# ==================== SAYFA YAPILANDIRMASI ====================
 st.set_page_config(
     page_title="Eagle Pro - AI Futbol Analiz",
     page_icon="🦅",
@@ -15,7 +14,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== KOYU TEMA CSS (FOTOĞRAFSIZ) ====================
 st.markdown("""
 <style>
     .stApp {
@@ -81,11 +79,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== SESSION STATE ====================
 if 'page' not in st.session_state:
     st.session_state['page'] = 'home'
 
-# ==================== KARŞILAMA EKRANI ====================
 if st.session_state['page'] == 'home':
 
     st.markdown("""
@@ -104,7 +100,7 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    st.markdown("### ⚡ Hızlı Erişim")
+    st.markdown("### ⚡ Hizli Erisim")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         if st.button("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier Lig", key="quick_pl"):
@@ -147,7 +143,7 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    st.markdown("### 📊 Lig Özetleri")
+    st.markdown("### 📊 Lig Ozetleri")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("""
@@ -181,7 +177,7 @@ if st.session_state['page'] == 'home':
             <div class="feature-card">
                 <h3 style='font-size: 36px;'>🎯</h3>
                 <h4>xG & Olay Verisi</h4>
-                <p style='font-size: 13px; color: #ccc;'>Beklenen gol, pas ağı, şut haritası</p>
+                <p style='font-size: 13px; color: #ccc;'>Beklenen gol, pas agi, sut haritasi</p>
             </div>
         """, unsafe_allow_html=True)
     with col3:
@@ -205,11 +201,10 @@ if st.session_state['page'] == 'home':
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Keşfetmeye Başla", use_container_width=True):
+        if st.button("🚀 Kesfetmeye Basla", use_container_width=True):
             st.session_state['page'] = 'analysis'
             st.rerun()
 
-# ==================== ANALİZ EKRANI ====================
 else:
 
     if 'quick_league' in st.session_state:
@@ -218,28 +213,27 @@ else:
     else:
         default_league = "Premier League"
 
-    # ==================== LİG LİSTESİ ====================
     LEAGUE_CODES = {
         "Premier League": "PL", "La Liga": "PD", "Bundesliga": "BL1",
         "Serie A": "SA", "Ligue 1": "FL1", "Championship": "ELC",
         "La Liga2": "SD", "Bundesliga 2": "BL2", "Serie B": "SB",
         "Ligue 2": "FL2", "Eredivisie": "ED", "Primeira Liga": "PPL",
-        "Süper Lig": "SL", "Belçika Pro League": "BLG", "İskoçya Premier": "SCO",
-        "Avusturya Bundesliga": "AUT", "İsviçre Super League": "SUI",
+        "Super Lig": "SL", "Belcika Pro League": "BLG", "Iskocya Premier": "SCO",
+        "Avusturya Bundesliga": "AUT", "Isvicre Super League": "SUI",
         "Yunanistan Super League": "GRE", "Rusya Premier": "RUS",
         "Ukrayna Premier": "UKR", "Danimarka Superliga": "DEN",
-        "Norveç Eliteserien": "NOR", "İsveç Allsvenskan": "SWE",
-        "Polonya Ekstraklasa": "POL", "Hırvatistan HNL": "CRO",
-        "Sırbistan SuperLiga": "SRB", "Çek Cumhuriyeti 1. Liga": "CZE",
+        "Norvec Eliteserien": "NOR", "Isvec Allsvenskan": "SWE",
+        "Polonya Ekstraklasa": "POL", "Hirvatistan HNL": "CRO",
+        "Sirbistan SuperLiga": "SRB", "Cek Cumhuriyeti 1. Liga": "CZE",
         "Romanya Liga 1": "ROU", "Macaristan NB I": "HUN",
         "Bulgaristan 1. Liga": "BUL", "Slovakya Super Liga": "SVK",
-        "Slovenya PrvaLiga": "SVN", "İrlanda Premier Division": "IRL",
-        "Şampiyonlar Ligi": "CL", "Avrupa Ligi": "EL", "Konferans Ligi": "ECL",
-        "Dünya Kupası": "WC", "Avrupa Şampiyonası": "EC",
-        "Copa America": "CAM", "Afrika Kupası": "AFC", "Asya Kupası": "ASC",
+        "Slovenya PrvaLiga": "SVN", "Irlanda Premier Division": "IRL",
+        "Sampiyonlar Ligi": "CL", "Avrupa Ligi": "EL", "Konferans Ligi": "ECL",
+        "Dunya Kupasi": "WC", "Avrupa Sampiyonasi": "EC",
+        "Copa America": "CAM", "Afrika Kupasi": "AFC", "Asya Kupasi": "ASC",
         "FA Cup": "FAC", "EFL Cup": "FLC", "DFB-Pokal": "DFB",
         "Coppa Italia": "CIT", "Coupe de France": "CDF",
-        "Copa del Rey": "CDR", "Türkiye Kupası": "TKC",
+        "Copa del Rey": "CDR", "Turkiye Kupasi": "TKC",
     }
 
     SS_LEAGUES = {
@@ -249,36 +243,35 @@ else:
         "La Liga2": "la-liga-2", "Bundesliga 2": "bundesliga-2",
         "Serie B": "serie-b", "Ligue 2": "ligue-2",
         "Eredivisie": "eredivisie", "Primeira Liga": "portugal-primeira-liga",
-        "Süper Lig": "süper-lig", "Belçika Pro League": "belgian-pro-league",
-        "İskoçya Premier": "scottish-premiership", "Avusturya Bundesliga": "austrian-bundesliga",
-        "İsviçre Super League": "swiss-super-league", "Yunanistan Super League": "greek-super-league",
+        "Super Lig": "super-lig", "Belcika Pro League": "belgian-pro-league",
+        "Iskocya Premier": "scottish-premiership", "Avusturya Bundesliga": "austrian-bundesliga",
+        "Isvicre Super League": "swiss-super-league", "Yunanistan Super League": "greek-super-league",
         "Rusya Premier": "russian-premier-league", "Ukrayna Premier": "ukrainian-premier-league",
-        "Danimarka Superliga": "danish-superliga", "Norveç Eliteserien": "norwegian-eliteserien",
-        "İsveç Allsvenskan": "swedish-allsvenskan", "Polonya Ekstraklasa": "polish-ekstraklasa",
-        "Hırvatistan HNL": "croatian-hnl", "Sırbistan SuperLiga": "serbian-superliga",
-        "Çek Cumhuriyeti 1. Liga": "czech-1-liga", "Romanya Liga 1": "romanian-liga-1",
+        "Danimarka Superliga": "danish-superliga", "Norvec Eliteserien": "norwegian-eliteserien",
+        "Isvec Allsvenskan": "swedish-allsvenskan", "Polonya Ekstraklasa": "polish-ekstraklasa",
+        "Hirvatistan HNL": "croatian-hnl", "Sirbistan SuperLiga": "serbian-superliga",
+        "Cek Cumhuriyeti 1. Liga": "czech-1-liga", "Romanya Liga 1": "romanian-liga-1",
         "Macaristan NB I": "hungarian-nb-i", "Bulgaristan 1. Liga": "bulgarian-1-liga",
         "Slovakya Super Liga": "slovak-super-liga", "Slovenya PrvaLiga": "slovenian-prvaliga",
-        "İrlanda Premier Division": "irish-premier-division",
+        "Irlanda Premier Division": "irish-premier-division",
     }
 
     ALL_LEAGUES = sorted(set(list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]))
 
     st.title("🦅 Eagle Pro - AI Futbol Analiz ve Tahmin")
-    st.markdown("### Top 30+ Lig, 2. Ligler, Kupalar, UEFA & FIFA - Veriyle Konuşan Analiz")
+    st.markdown("### Top 30+ Lig, 2. Ligler, Kupalar, UEFA & FIFA - Veriyle Konusan Analiz")
 
-    if st.button("🏠 Ana Sayfaya Dön"):
+    if st.button("🏠 Ana Sayfaya Don"):
         st.session_state['page'] = 'home'
         st.rerun()
 
     if default_league in ALL_LEAGUES:
-        league_name = st.selectbox("🏆 Lig/Turnuva Seç", ALL_LEAGUES, index=ALL_LEAGUES.index(default_league))
+        league_name = st.selectbox("🏆 Lig/Turnuva Sec", ALL_LEAGUES, index=ALL_LEAGUES.index(default_league))
     else:
-        league_name = st.selectbox("🏆 Lig/Turnuva Seç", ALL_LEAGUES)
+        league_name = st.selectbox("🏆 Lig/Turnuva Sec", ALL_LEAGUES)
 
-    # ==================== PUAN DURUMU ====================
-    if st.button("📊 Puan Durumunu Göster"):
-        with st.spinner("Veri çekiliyor..."):
+    if st.button("📊 Puan Durumunu Goster"):
+        with st.spinner("Veri cekiliyor..."):
             if league_name in LEAGUE_CODES:
                 league_code = LEAGUE_CODES[league_name]
                 table = get_league_table(league_code)
@@ -288,8 +281,8 @@ else:
                         rows = standings[0].get("table", [])
                         if rows:
                             df = pd.DataFrame([{
-                                "Sıra": r["position"],
-                                "Takım": r["team"]["name"],
+                                "Sira": r["position"],
+                                "Takim": r["team"]["name"],
                                 "O": r["playedGames"],
                                 "G": r["won"],
                                 "B": r["draw"],
@@ -301,11 +294,11 @@ else:
                             } for r in rows])
                             st.dataframe(df, use_container_width=True)
                         else:
-                            st.warning("Bu lig için tablo verisi bulunamadı.")
+                            st.warning("Bu lig icin tablo verisi bulunamadi.")
                     else:
-                        st.warning("Standings verisi boş.")
+                        st.warning("Standings verisi bos.")
                 else:
-                    st.error("Football-Data.org'dan puan durumu alınamadı. Sports-skills deneniyor...")
+                    st.error("Football-Data.org'dan puan durumu alinamadi. Sports-skills deneniyor...")
                     ss_id = SS_LEAGUES.get(league_name)
                     if ss_id:
                         ss_data = get_ss_standings(ss_id)
@@ -316,8 +309,8 @@ else:
                                 entries = first.get("entries", first.get("table", []))
                                 if entries:
                                     df = pd.DataFrame([{
-                                        "Sıra": item.get("rank") or item.get("position", ""),
-                                        "Takım": item.get("team", {}).get("name", "") if isinstance(item.get("team"), dict) else str(item.get("team", "")),
+                                        "Sira": item.get("rank") or item.get("position", ""),
+                                        "Takim": item.get("team", {}).get("name", "") if isinstance(item.get("team"), dict) else str(item.get("team", "")),
                                         "O": item.get("played") or item.get("playedGames", ""),
                                         "G": item.get("win") or item.get("won", ""),
                                         "B": item.get("draw", ""),
@@ -329,11 +322,11 @@ else:
                                     } for item in entries])
                                     st.dataframe(df, use_container_width=True)
                                 else:
-                                    st.warning("Sports-skills'ten tablo verisi alınamadı.")
+                                    st.warning("Sports-skills'ten tablo verisi alinamadi.")
                             else:
-                                st.warning("Sports-skills'ten standings verisi boş.")
+                                st.warning("Sports-skills'ten standings verisi bos.")
                         else:
-                            st.error("Her iki kaynaktan da veri alınamadı.")
+                            st.error("Her iki kaynaktan da veri alinamadi.")
             else:
                 ss_id = SS_LEAGUES.get(league_name)
                 if ss_id:
@@ -345,8 +338,8 @@ else:
                             entries = first.get("entries", first.get("table", []))
                             if entries:
                                 df = pd.DataFrame([{
-                                    "Sıra": item.get("rank") or item.get("position", ""),
-                                    "Takım": item.get("team", {}).get("name", "") if isinstance(item.get("team"), dict) else str(item.get("team", "")),
+                                    "Sira": item.get("rank") or item.get("position", ""),
+                                    "Takim": item.get("team", {}).get("name", "") if isinstance(item.get("team"), dict) else str(item.get("team", "")),
                                     "O": item.get("played") or item.get("playedGames", ""),
                                     "G": item.get("win") or item.get("won", ""),
                                     "B": item.get("draw", ""),
@@ -358,15 +351,14 @@ else:
                                 } for item in entries])
                                 st.dataframe(df, use_container_width=True)
                             else:
-                                st.warning("Sports-skills'ten tablo verisi alınamadı.")
+                                st.warning("Sports-skills'ten tablo verisi alinamadi.")
                         else:
-                            st.warning("Sports-skills'ten standings verisi boş.")
+                            st.warning("Sports-skills'ten standings verisi bos.")
                     else:
-                        st.error("Sports-skills'ten veri alınamadı.")
+                        st.error("Sports-skills'ten veri alinamadi.")
                 else:
-                    st.error(f"'{league_name}' için veri kaynağı bulunamadı.")
+                    st.error(f"'{league_name}' icin veri kaynagi bulunamadi.")
 
-    # ==================== UNDERSTAT ====================
     if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
         understat_mapping = {
             "Premier League": "EPL", "La Liga": "La_liga",
@@ -374,20 +366,19 @@ else:
             "Ligue 1": "Ligue_1"
         }
         if st.button("⚡ xG/xA Verileri (Understat)"):
-            with st.spinner("Understat'ten xG verileri çekiliyor..."):
+            with st.spinner("Understat'ten xG verileri cekiliyor..."):
                 xg_df = get_xg_from_understat(understat_mapping[league_name], "2024")
                 if not xg_df.empty:
                     st.dataframe(xg_df.head(20))
                 else:
-                    st.warning("xG verisi alınamadı.")
+                    st.warning("xG verisi alinamadi.")
 
-    # ==================== FBREF ====================
-    if st.button("📈 Takım İstatistikleri (FBref)"):
-        with st.spinner("Veri çekiliyor (sports-skills üzerinden)..."):
+    if st.button("📈 Takım Istatistikleri (FBref)"):
+        with st.spinner("Veri cekiliyor (sports-skills uzerinden)..."):
             for season in ["2024", "2023"]:
                 df = get_fbref_team_stats(league_name, season)
                 if not df.empty and "Hata" not in df.columns:
-                    st.success(f"{season} sezonu verisi başarıyla çekildi!")
+                    st.success(f"{season} sezonu verisi basariyla cekildi!")
                     if "team" in df.columns:
                         df["team_name"] = df["team"].apply(
                             lambda x: x.get("name", str(x)) if isinstance(x, dict) else str(x)
@@ -395,7 +386,7 @@ else:
                         cols = ["position", "team_name", "played", "won", "drawn", "lost", 
                                 "goals_for", "goals_against", "goal_difference", "points"]
                         df = df[[c for c in cols if c in df.columns]]
-                        df.columns = ["Sıra", "Takım", "O", "G", "B", "M", "A", "Y", "Avans", "Puan"]
+                        df.columns = ["Sira", "Takim", "O", "G", "B", "M", "A", "Y", "Avans", "Puan"]
                     else:
                         df.columns = [col.replace("_", " ").title() for col in df.columns]
                     st.dataframe(df, use_container_width=True)
@@ -404,17 +395,16 @@ else:
                     if not df.empty and "Hata" in df.columns:
                         st.warning(f"{season}: {df['Hata'].iloc[0]}")
                     else:
-                        st.warning(f"{season} sezonu için veri alınamadı.")
+                        st.warning(f"{season} sezonu icin veri alinamadi.")
             else:
-                st.error("Hiçbir sezon için veri alınamadı.")
+                st.error("Hicbir sezon icin veri alinamadi.")
 
-    # ==================== SPORTS-SKILLS TEST ====================
     st.markdown("---")
-    st.subheader("🧪 sports-skills Test Alanı")
+    st.subheader("🧪 sports-skills Test Alani")
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🏆 Premier League Puan Durumu (sports-skills)"):
-            with st.spinner("sports-skills'ten veri çekiliyor..."):
+            with st.spinner("sports-skills'ten veri cekiliyor..."):
                 data = get_ss_standings("premier-league-2024")
                 if data:
                     if "standings" in data:
@@ -437,8 +427,8 @@ else:
                                     else:
                                         team_name = str(team)
                                     row = {
-                                        "Sıra": item.get("rank") or item.get("position", ""),
-                                        "Takım": team_name,
+                                        "Sira": item.get("rank") or item.get("position", ""),
+                                        "Takim": team_name,
                                         "O": item.get("played") or item.get("playedGames", ""),
                                         "G": item.get("win") or item.get("won", ""),
                                         "B": item.get("draw", ""),
@@ -452,31 +442,30 @@ else:
                                 df = pd.DataFrame(rows)
                                 st.dataframe(df, use_container_width=True)
                             else:
-                                st.warning("Tablo verisi bulunamadı.")
+                                st.warning("Tablo verisi bulunamadi.")
                                 st.json(first)
                         else:
-                            st.warning("Standings listesi boş.")
+                            st.warning("Standings listesi bos.")
                     else:
-                        st.warning("'standings' anahtarı bulunamadı.")
+                        st.warning("'standings' anahtari bulunamadi.")
                         st.json(data)
                 else:
-                    st.error("Veri alınamadı.")
+                    st.error("Veri alinamadi.")
     with col2:
-        if st.button("🔎 Takım Ara (Arsenal)"):
-            with st.spinner("Takım profili aranıyor..."):
+        if st.button("🔎 Takim Ara (Arsenal)"):
+            with st.spinner("Takim profili araniyor..."):
                 team = get_ss_team_profile("arsenal")
                 if team:
                     st.json(team)
                 else:
-                    st.error("Takım bulunamadı.")
+                    st.error("Takim bulunamadi.")
 
-    # ==================== STATSBOMB ====================
     st.markdown("---")
-    st.subheader("⚽ StatsBomb Olay Bazlı Veri (Açık Veri)")
+    st.subheader("⚽ StatsBomb Olay Bazli Veri (Acik Veri)")
     TOURNAMENTS = {
-        "FIFA Dünya Kupası 2022": {"competition_id": 43, "season_id": 106},
-        "UEFA Şampiyonlar Ligi 2021-22": {"competition_id": 16, "season_id": 4},
-        "UEFA Şampiyonlar Ligi 2022-23": {"competition_id": 16, "season_id": 14},
+        "FIFA Dunya Kupasi 2022": {"competition_id": 43, "season_id": 106},
+        "UEFA Sampiyonlar Ligi 2021-22": {"competition_id": 16, "season_id": 4},
+        "UEFA Sampiyonlar Ligi 2022-23": {"competition_id": 16, "season_id": 14},
         "Premier League 2021-22": {"competition_id": 2, "season_id": 4},
         "Premier League 2022-23": {"competition_id": 2, "season_id": 14},
         "La Liga 2021-22": {"competition_id": 11, "season_id": 4},
@@ -488,16 +477,16 @@ else:
         "Ligue 1 2021-22": {"competition_id": 7, "season_id": 4},
         "Ligue 1 2022-23": {"competition_id": 7, "season_id": 14},
     }
-    selected_tournament = st.selectbox("🏆 Turnuva Seç", list(TOURNAMENTS.keys()))
+    selected_tournament = st.selectbox("🏆 Turnuva Sec", list(TOURNAMENTS.keys()))
     tournament_info = TOURNAMENTS[selected_tournament]
     competition_id = tournament_info["competition_id"]
     season_id = tournament_info["season_id"]
 
-    if st.button("📋 Maçları Listele"):
-        with st.spinner("StatsBomb'dan maçlar çekiliyor..."):
+    if st.button("📋 Maclari Listele"):
+        with st.spinner("StatsBomb'dan maclar cekiliyor..."):
             matches = get_statsbomb_matches(competition_id, season_id)
             if not matches.empty:
-                st.success(f"{len(matches)} maç bulundu!")
+                st.success(f"{len(matches)} mac bulundu!")
                 match_options = []
                 for idx, row in matches.iterrows():
                     home_team = row.get('home_team', {})
@@ -522,102 +511,100 @@ else:
                     })
                 st.session_state['match_options'] = match_options
             else:
-                st.error("Maç listesi alınamadı.")
+                st.error("Mac listesi alinamadi.")
 
     if 'match_options' in st.session_state and st.session_state['match_options']:
         match_options = st.session_state['match_options']
         selected_match_label = st.selectbox(
-            "📅 Maç Seç",
+            "📅 Mac Sec",
             options=[m["display"] for m in match_options],
             key="sb_match_select"
         )
         selected_match = next(m for m in match_options if m["display"] == selected_match_label)
-        
-        # Tahmin butonları
+
         st.markdown("---")
         st.subheader("🧠 Eagle Pro - AI Tahmin Merkezi")
-        
+
         col1, col2 = st.columns(2)
         with col1:
             predict_1x2 = st.button("📊 1X2 Tahmini", key="predict_1x2")
-            predict_ht = st.button("⏱️ İlk Yarı Tahmini", key="predict_ht")
+            predict_ht = st.button("⏱️ Ilk Yari Tahmini", key="predict_ht")
             predict_btts = st.button("🤝 KG Var/Yok Tahmini", key="predict_btts")
         with col2:
-            predict_over15 = st.button("⚽ Alt/Üst 1.5", key="predict_over15")
-            predict_over25 = st.button("⚽ Alt/Üst 2.5", key="predict_over25")
-            predict_over35 = st.button("⚽ Alt/Üst 3.5", key="predict_over35")
+            predict_over15 = st.button("⚽ Alt/Ust 1.5", key="predict_over15")
+            predict_over25 = st.button("⚽ Alt/Ust 2.5", key="predict_over25")
+            predict_over35 = st.button("⚽ Alt/Ust 3.5", key="predict_over35")
             predict_ai = st.button("🦅 AI Yorumcu", key="predict_ai")
-        
-        # Geçici olarak örnek tahmin sonuçları göster
+
         if any([predict_1x2, predict_ht, predict_btts, predict_over15, predict_over25, predict_over35, predict_ai]):
-            st.info("🧪 Şu an örnek verilerle tahmin yapılmaktadır. Gerçek model entegrasyonu için veri seti oluşturuluyor.")
-            
-            st.subheader("📈 Tahmin Sonuçları")
-            
+            st.info("🧪 Su an ornek verilerle tahmin yapilmaktadir. Gercek model entegrasyonu icin veri seti olusturuluyor.")
+
+            st.subheader("📈 Tahmin Sonuclari")
+
             if predict_1x2:
-                st.markdown("#### 📊 1X2 Maç Sonucu")
+                st.markdown("#### 📊 1X2 Mac Sonucu")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("🏠 Ev Kazanır", "%68")
+                    st.metric("🏠 Ev Kazanir", "%68")
                 with col2:
                     st.metric("🤝 Beraberlik", "%22")
                 with col3:
-                    st.metric("✈️ Deplasman Kazanır", "%10")
-            
+                    st.metric("✈️ Deplasman Kazanir", "%10")
+
             if predict_ht:
-                st.markdown("#### ⏱️ İlk Yarı Sonucu")
+                st.markdown("#### ⏱️ Ilk Yari Sonucu")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("🏠 Ev Kazanır", "%45")
+                    st.metric("🏠 Ev Kazanir", "%45")
                 with col2:
                     st.metric("🤝 Beraberlik", "%40")
                 with col3:
-                    st.metric("✈️ Deplasman Kazanır", "%15")
-            
+                    st.metric("✈️ Deplasman Kazanir", "%15")
+
             if predict_btts:
-                st.markdown("#### 🤝 Karşılıklı Gol (BTTS)")
+                st.markdown("#### 🤝 Karsilikli Gol (BTTS)")
                 col1, col2 = st.columns(2)
                 with col1:
                     st.metric("✅ Evet (KG Var)", "%62")
                 with col2:
-                    st.metric("❌ Hayır (KG Yok)", "%38")
-            
+                    st.metric("❌ Hayir (KG Yok)", "%38")
+
             if predict_over15:
-                st.markdown("#### ⚽ Alt/Üst 1.5")
+                st.markdown("#### ⚽ Alt/Ust 1.5")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⬆️ Üst 1.5", "%78")
+                    st.metric("⬆️ Ust 1.5", "%78")
                 with col2:
                     st.metric("⬇️ Alt 1.5", "%22")
-            
+
             if predict_over25:
-                st.markdown("#### ⚽ Alt/Üst 2.5")
+                st.markdown("#### ⚽ Alt/Ust 2.5")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⬆️ Üst 2.5", "%55")
+                    st.metric("⬆️ Ust 2.5", "%55")
                 with col2:
                     st.metric("⬇️ Alt 2.5", "%45")
-            
+
             if predict_over35:
-                st.markdown("#### ⚽ Alt/Üst 3.5")
+                st.markdown("#### ⚽ Alt/Ust 3.5")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⬆️ Üst 3.5", "%30")
+                    st.metric("⬆️ Ust 3.5", "%30")
                 with col2:
                     st.metric("⬇️ Alt 3.5", "%70")
-            
+
             if predict_ai:
                 st.markdown("#### 🦅 AI Yorumcu")
                 commentary = generate_ai_commentary(
                     selected_match['home'],
                     selected_match['away'],
                     {
-                        '1X2': {'tahmin': 'Ev Sahibi Kazanır', 'ev_sahibi_kazanma': 68, 'beraberlik': 22, 'deplasman_kazanma': 10},
+                        '1X2': {'tahmin': 'Ev Sahibi Kazanir', 'ev_sahibi_kazanma': 68, 'beraberlik': 22, 'deplasman_kazanma': 10},
                         'HT': {'tahmin': 'Beraberlik', 'ev_sahibi_kazanma': 45, 'beraberlik': 40, 'deplasman_kazanma': 15},
                         'btts': {'tahmin': 'Evet', 'evet': 62, 'hayir': 38},
                         'over_under': {
-                            '1.5': {'tahmin': 'Üst', 'over': 78, 'under': 22},
-                            '2.5': {'tahmin': 'Üst', 'over': 55, 'under': 45},
+                            '1.5': {'tahmin': 'Ust', 'over': 78, 'under': 22},
+                            '2.5': {'tahmin': 'Ust', 'over': 55, 'under': 45},
                             '3.5': {'tahmin': 'Alt', 'over': 30, 'under': 70}
                         }
                     },
@@ -629,10 +616,9 @@ else:
                     }
                 )
                 st.markdown(commentary)
-        
-        # Olay gösterme butonu
-        if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster", key="show_events"):
-            with st.spinner("Olaylar çekiliyor..."):
+
+        if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarini Goster", key="show_events"):
+            with st.spinner("Olaylar cekiliyor..."):
                 events = get_statsbomb_events(selected_match["match_id"])
                 if not events.empty:
                     st.success(f"{len(events)} olay bulundu!")
@@ -641,7 +627,7 @@ else:
                     st.session_state['match_id'] = selected_match["match_id"]
                     event_types = events['type'].unique().tolist()
                     selected_types = st.multiselect(
-                        "🔍 Olay Türlerini Filtrele",
+                        "🔍 Olay Turlerini Filtrele",
                         options=event_types,
                         default=event_types[:5] if len(event_types) >= 5 else event_types,
                         key="event_types_filter"
@@ -651,37 +637,36 @@ else:
                         st.dataframe(filtered_events, use_container_width=True)
                     else:
                         st.dataframe(events, use_container_width=True)
-                    st.subheader("📊 Olay Özeti")
+                    st.subheader("📊 Olay Ozeti")
                     summary = events['type'].value_counts().reset_index()
-                    summary.columns = ['Olay Türü', 'Sayı']
+                    summary.columns = ['Olay Turu', 'Sayi']
                     st.dataframe(summary, use_container_width=True)
                 else:
-                    st.warning("Bu maç için olay verisi bulunamadı.")
+                    st.warning("Bu mac icin olay verisi bulunamadi.")
     else:
         if 'match_options' not in st.session_state or not st.session_state['match_options']:
-            st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
+            st.info("Lutfen yukaridan bir turnuva secip 'Maclari Listele' butonuna tiklayin.")
 
-    # ==================== PAS AĞI ====================
     st.markdown("---")
-    st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
+    st.subheader("🔗 Pas Agi Analizi (StatsBomb)")
     if 'selected_match' in st.session_state and st.session_state['selected_match']:
         selected_match = st.session_state['selected_match']
         match_id = st.session_state.get('match_id', None)
-        if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_network"):
+        if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Agini Goster", key="show_pass_network"):
             if not match_id:
-                st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
+                st.warning("Once yukaridan bir mac secip 'Olaylari Goster' butonuna tiklayin.")
             else:
-                with st.spinner("Pas verileri işleniyor..."):
+                with st.spinner("Pas verileri isleniyor..."):
                     try:
                         events = st.session_state.get('events', None)
                         if events is None or events.empty:
                             events = get_statsbomb_events(match_id)
                         if events.empty:
-                            st.warning("Bu maç için olay verisi bulunamadı.")
+                            st.warning("Bu mac icin olay verisi bulunamadi.")
                             st.stop()
                         passes = events[events['type'] == 'Pass'].copy()
                         if passes.empty:
-                            st.warning("Bu maçta pas verisi bulunamadı.")
+                            st.warning("Bu macta pas verisi bulunamadi.")
                             st.stop()
                         import numpy as np
                         player_positions = {}
@@ -748,14 +733,14 @@ else:
                                 continue
                             positions[p] = {'x': mean_x, 'y': mean_y, 'total': data['total']}
                         if not positions:
-                            st.warning("Pozisyon hesaplanamadı.")
+                            st.warning("Pozisyon hesaplanamadi.")
                             st.stop()
                         connections = {}
                         for (p1, p2), count in pass_counts.items():
                             if p1 in positions and p2 in positions and count >= 2:
                                 connections[(p1, p2)] = count
                         if not connections:
-                            st.warning("Yeterli pas bağlantısı yok (en az 2 pas).")
+                            st.warning("Yeterli pas baglantisi yok (en az 2 pas).")
                             st.stop()
                         fig, ax = plt.subplots(figsize=(12, 8))
                         ax.set_facecolor('#22312b')
@@ -788,7 +773,7 @@ else:
                         ax.set_ylim(0, 80)
                         ax.set_aspect('equal')
                         ax.axis('off')
-                        ax.set_title(f"Pas Ağı - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
+                        ax.set_title(f"Pas Agi - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
                         st.pyplot(fig)
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -798,34 +783,33 @@ else:
                         with col3:
                             if positions:
                                 most = max(positions.items(), key=lambda x: x[1]['total'])
-                                st.metric("En Çok Pas", most[0])
+                                st.metric("En Cok Pas", most[0])
                     except Exception as e:
-                        st.error(f"Pas ağı oluşturulurken hata: {str(e)}")
-                        with st.expander("🔍 Hata Ayıklama: Ham Olay Verisi (İlk 5)"):
+                        st.error(f"Pas agi olusturulurken hata: {str(e)}")
+                        with st.expander("🔍 Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
                             if 'events' in st.session_state:
                                 st.dataframe(st.session_state['events'].head(5))
     else:
-        st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
+        st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")
 
-    # ==================== MAÇ ÖZET RAPORU ====================
     st.markdown("---")
-    st.subheader("📋 Maç Özet Raporu (StatsBomb)")
+    st.subheader("📋 Mac Ozet Raporu (StatsBomb)")
     if 'selected_match' in st.session_state and st.session_state['selected_match']:
         selected_match = st.session_state['selected_match']
         match_id = st.session_state.get('match_id', None)
-        if st.button(f"📄 {selected_match['home']} - {selected_match['away']} Maç Özet Raporu Oluştur", key="generate_match_report"):
+        if st.button(f"📄 {selected_match['home']} - {selected_match['away']} Mac Ozet Raporu Olustur", key="generate_match_report"):
             if not match_id:
-                st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
+                st.warning("Once yukaridan bir mac secip 'Olaylari Goster' butonuna tiklayin.")
             else:
-                with st.spinner("Maç özet raporu oluşturuluyor..."):
+                with st.spinner("Mac ozet raporu olusturuluyor..."):
                     try:
                         events = st.session_state.get('events', None)
                         if events is None or events.empty:
                             events = get_statsbomb_events(match_id)
                         if events.empty:
-                            st.warning("Bu maç için olay verisi bulunamadı.")
+                            st.warning("Bu mac icin olay verisi bulunamadi.")
                             st.stop()
-                        st.subheader("📌 Maç Bilgileri")
+                        st.subheader("📌 Mac Bilgileri")
                         col1, col2, col3 = st.columns(3)
                         with col1:
                             st.metric("🏠 Ev Sahibi", selected_match['home'])
@@ -835,7 +819,7 @@ else:
                             match_date = events['event_date'].iloc[0] if 'event_date' in events.columns else 'Tarih yok'
                             st.metric("📅 Tarih", match_date[:10] if len(str(match_date)) > 10 else str(match_date))
                         st.divider()
-                        st.subheader("📊 Temel İstatistikler")
+                        st.subheader("📊 Temel Istatistikler")
                         passes = events[events['type'] == 'Pass'].copy() if 'type' in events.columns else pd.DataFrame()
                         shots = events[events['type'] == 'Shot'].copy() if 'type' in events.columns else pd.DataFrame()
                         carries = events[events['type'] == 'Carry'].copy() if 'type' in events.columns else pd.DataFrame()
@@ -844,13 +828,13 @@ else:
                         with col1:
                             st.metric("🔄 Toplam Pas", len(passes))
                         with col2:
-                            st.metric("🎯 Toplam Şut", len(shots))
+                            st.metric("🎯 Toplam Sut", len(shots))
                         with col3:
-                            st.metric("🔥 Pres Sayısı", len(pressures))
+                            st.metric("🔥 Pres Sayisi", len(pressures))
                         with col4:
-                            st.metric("🏃 Top Taşıma", len(carries))
+                            st.metric("🏃 Top Tasima", len(carries))
                         st.divider()
-                        st.subheader("🎯 xG ve Şut Haritası")
+                        st.subheader("🎯 xG ve Sut Haritasi")
                         if not shots.empty:
                             shot_xg = []
                             for idx, row in shots.iterrows():
@@ -868,7 +852,7 @@ else:
                                 with col1:
                                     st.metric("⚡ Toplam xG", round(total_xg, 2))
                                 with col2:
-                                    st.metric("📊 Ortalama xG/Şut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
+                                    st.metric("📊 Ortalama xG/Sut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
                             from mplsoccer import Pitch
                             pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
                             fig, ax = pitch.draw(figsize=(10, 7))
@@ -887,12 +871,12 @@ else:
                                             xg_val = shot_data.get('statsbomb_xg', None)
                                             if xg_val is not None:
                                                 ax.text(x+2, y+2, f"{float(xg_val):.2f}", color='white', fontsize=7)
-                            ax.set_title(f"Şut Haritası - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
+                            ax.set_title(f"Sut Haritasi - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
                             st.pyplot(fig)
                         else:
-                            st.info("Bu maçta şut verisi bulunamadı.")
+                            st.info("Bu macta sut verisi bulunamadi.")
                         st.divider()
-                        st.subheader("🔗 Pas Ağı")
+                        st.subheader("🔗 Pas Agi")
                         if not passes.empty:
                             import numpy as np
                             player_positions = {}
@@ -961,16 +945,16 @@ else:
                                             linewidth = 1 + (count / 3)
                                             alpha = min(0.8, 0.2 + (count / 10))
                                             ax.plot([x1, x2], [y1, y2], color='cyan', linewidth=linewidth, alpha=alpha, zorder=2)
-                                    ax.set_title(f"Pas Ağı - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
+                                    ax.set_title(f"Pas Agi - {selected_match['home']} vs {selected_match['away']}", color='white', fontsize=14)
                                     st.pyplot(fig)
                                 else:
-                                    st.info("Pas bağlantıları yeterli değil.")
+                                    st.info("Pas baglantilari yeterli degil.")
                             else:
                                 st.info("Yeterli pas verisi yok.")
                         else:
-                            st.info("Bu maçta pas verisi bulunamadı.")
+                            st.info("Bu macta pas verisi bulunamadi.")
                         st.divider()
-                        st.subheader("🏅 Öne Çıkan Oyuncular")
+                        st.subheader("🏅 One Cikan Oyuncular")
                         if not passes.empty:
                             pass_counts_by_player = {}
                             for idx, row in passes.iterrows():
@@ -985,8 +969,8 @@ else:
                                     pass_counts_by_player[player] = pass_counts_by_player.get(player, 0) + 1
                             if pass_counts_by_player:
                                 top_passers = sorted(pass_counts_by_player.items(), key=lambda x: x[1], reverse=True)[:5]
-                                st.write("**En Çok Pas Yapan Oyuncular**")
-                                df_passes = pd.DataFrame(top_passers, columns=["Oyuncu", "Pas Sayısı"])
+                                st.write("**En Cok Pas Yapan Oyuncular**")
+                                df_passes = pd.DataFrame(top_passers, columns=["Oyuncu", "Pas Sayisi"])
                                 st.dataframe(df_passes, use_container_width=True, hide_index=True)
                         if not shots.empty:
                             shot_counts_by_player = {}
@@ -1002,35 +986,34 @@ else:
                                     shot_counts_by_player[player] = shot_counts_by_player.get(player, 0) + 1
                             if shot_counts_by_player:
                                 top_shooters = sorted(shot_counts_by_player.items(), key=lambda x: x[1], reverse=True)[:5]
-                                st.write("**En Çok Şut Çeken Oyuncular**")
-                                df_shots = pd.DataFrame(top_shooters, columns=["Oyuncu", "Şut Sayısı"])
+                                st.write("**En Cok Sut Ceken Oyuncular**")
+                                df_shots = pd.DataFrame(top_shooters, columns=["Oyuncu", "Sut Sayisi"])
                                 st.dataframe(df_shots, use_container_width=True, hide_index=True)
-                        st.success("✅ Maç özet raporu başarıyla oluşturuldu!")
+                        st.success("✅ Mac ozet raporu basariyla olusturuldu!")
                     except Exception as e:
-                        st.error(f"Rapor oluşturulurken hata: {str(e)}")
-                        with st.expander("🔍 Hata Ayıklama: Ham Olay Verisi (İlk 5)"):
+                        st.error(f"Rapor olusturulurken hata: {str(e)}")
+                        with st.expander("🔍 Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
                             if 'events' in st.session_state:
                                 st.dataframe(st.session_state['events'].head(5))
     else:
-        st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
+        st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")
 
-    # ==================== TAKIM STİLİ ANALİZİ ====================
     st.markdown("---")
-    st.subheader("📊 Takım Stili Analizi (StatsBomb)")
+    st.subheader("📊 Takim Stili Analizi (StatsBomb)")
     if 'selected_match' in st.session_state and st.session_state['selected_match']:
         selected_match = st.session_state['selected_match']
         match_id = st.session_state.get('match_id', None)
-        if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Takım Stili Analizi", key="team_style_analysis"):
+        if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Takim Stili Analizi", key="team_style_analysis"):
             if not match_id:
-                st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
+                st.warning("Once yukaridan bir mac secip 'Olaylari Goster' butonuna tiklayin.")
             else:
-                with st.spinner("Takım stili analizi yapılıyor..."):
+                with st.spinner("Takim stili analizi yapiliyor..."):
                     try:
                         events = st.session_state.get('events', None)
                         if events is None or events.empty:
                             events = get_statsbomb_events(match_id)
                         if events.empty:
-                            st.warning("Bu maç için olay verisi bulunamadı.")
+                            st.warning("Bu mac icin olay verisi bulunamadi.")
                             st.stop()
                         teams = []
                         if 'team' in events.columns:
@@ -1038,7 +1021,7 @@ else:
                         elif 'team_name' in events.columns:
                             teams = events['team_name'].unique().tolist()
                         if len(teams) < 2:
-                            st.warning("Takım bilgileri bulunamadı.")
+                            st.warning("Takim bilgileri bulunamadi.")
                             st.stop()
                         home_team = teams[0] if teams else selected_match['home']
                         away_team = teams[1] if len(teams) > 1 else selected_match['away']
@@ -1056,13 +1039,13 @@ else:
                                     if isinstance(pass_data, dict):
                                         if pass_data.get('outcome', {}).get('name') != 'Incomplete':
                                             successful_passes += 1
-                                metrics['Pas Başarı Oranı'] = round((successful_passes / total_passes) * 100, 1)
+                                metrics['Pas Basari Orani'] = round((successful_passes / total_passes) * 100, 1)
                             else:
-                                metrics['Pas Başarı Oranı'] = 0
+                                metrics['Pas Basari Orani'] = 0
                             pressures = team_events[team_events['type'] == 'Pressure'].copy() if 'type' in team_events.columns else pd.DataFrame()
                             metrics['Toplam Pres'] = len(pressures)
                             shots = team_events[team_events['type'] == 'Shot'].copy() if 'type' in team_events.columns else pd.DataFrame()
-                            metrics['Toplam Şut'] = len(shots)
+                            metrics['Toplam Sut'] = len(shots)
                             shot_xg = []
                             for idx, row in shots.iterrows():
                                 shot_data = row.get('shot', {})
@@ -1075,7 +1058,7 @@ else:
                                             pass
                             metrics['Toplam xG'] = round(sum(shot_xg), 2) if shot_xg else 0
                             carries = team_events[team_events['type'] == 'Carry'].copy() if 'type' in team_events.columns else pd.DataFrame()
-                            metrics['Top Taşıma'] = len(carries)
+                            metrics['Top Tasima'] = len(carries)
                             high_pressures = 0
                             for idx, row in pressures.iterrows():
                                 loc = row.get('location', [])
@@ -1086,31 +1069,31 @@ else:
                                             high_pressures += 1
                                     except:
                                         pass
-                            metrics['Rakip Yarı Sahada Pres'] = high_pressures
-                            metrics['Rakip Yarı Sahada Pres Oranı'] = round((high_pressures / metrics['Toplam Pres'] * 100), 1) if metrics['Toplam Pres'] > 0 else 0
+                            metrics['Rakip Yari Sahada Pres'] = high_pressures
+                            metrics['Rakip Yari Sahada Pres Orani'] = round((high_pressures / metrics['Toplam Pres'] * 100), 1) if metrics['Toplam Pres'] > 0 else 0
                             ball_recoveries = team_events[team_events['type'] == 'Ball Recovery'].copy() if 'type' in team_events.columns else pd.DataFrame()
-                            recovery_zones = {'kendi_yarı': 0, 'orta_saha': 0, 'rakip_yarı': 0}
+                            recovery_zones = {'kendi_yari': 0, 'orta_saha': 0, 'rakip_yari': 0}
                             for idx, row in ball_recoveries.iterrows():
                                 loc = row.get('location', [])
                                 if len(loc) >= 2:
                                     try:
                                         x = float(loc[0])
                                         if x < 40:
-                                            recovery_zones['kendi_yarı'] += 1
+                                            recovery_zones['kendi_yari'] += 1
                                         elif x < 80:
                                             recovery_zones['orta_saha'] += 1
                                         else:
-                                            recovery_zones['rakip_yarı'] += 1
+                                            recovery_zones['rakip_yari'] += 1
                                     except:
                                         pass
-                            metrics['Top Kapma - Kendi Yarı'] = recovery_zones['kendi_yarı']
+                            metrics['Top Kapma - Kendi Yari'] = recovery_zones['kendi_yari']
                             metrics['Top Kapma - Orta Saha'] = recovery_zones['orta_saha']
-                            metrics['Top Kapma - Rakip Yarı'] = recovery_zones['rakip_yarı']
-                            metrics['Aksiyon Hızı (Skor)'] = "Orta"
+                            metrics['Top Kapma - Rakip Yari'] = recovery_zones['rakip_yari']
+                            metrics['Aksiyon Hizi (Skor)'] = "Orta"
                             return metrics
                         home_metrics = calculate_style_metrics(home_events, home_team)
                         away_metrics = calculate_style_metrics(away_events, away_team)
-                        st.subheader(f"⚽ {home_team} vs {away_team} - Stil Karşılaştırması")
+                        st.subheader(f"⚽ {home_team} vs {away_team} - Stil Karsilastirmasi")
                         comparison_data = {
                             "Metrik": list(home_metrics.keys()),
                             home_team: list(home_metrics.values()),
@@ -1121,81 +1104,81 @@ else:
                         st.divider()
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.subheader(f"📍 {home_team} - Top Kapma Bölgeleri")
+                            st.subheader(f"📍 {home_team} - Top Kapma Bolgeleri")
                             recovery_data = {
-                                'Bölge': ['Kendi Yarı', 'Orta Saha', 'Rakip Yarı'],
-                                'Sayı': [
-                                    home_metrics['Top Kapma - Kendi Yarı'],
+                                'Bolge': ['Kendi Yari', 'Orta Saha', 'Rakip Yari'],
+                                'Sayi': [
+                                    home_metrics['Top Kapma - Kendi Yari'],
                                     home_metrics['Top Kapma - Orta Saha'],
-                                    home_metrics['Top Kapma - Rakip Yarı']
+                                    home_metrics['Top Kapma - Rakip Yari']
                                 ]
                             }
-                            if sum(recovery_data['Sayı']) > 0:
+                            if sum(recovery_data['Sayi']) > 0:
                                 fig, ax = plt.subplots()
-                                ax.pie(recovery_data['Sayı'], labels=recovery_data['Bölge'], autopct='%1.1f%%', 
+                                ax.pie(recovery_data['Sayi'], labels=recovery_data['Bolge'], autopct='%1.1f%%', 
                                        colors=['#ff6b6b', '#feca57', '#48dbfb'], startangle=90)
                                 ax.axis('equal')
                                 st.pyplot(fig)
                             else:
                                 st.info("Top kapma verisi yok.")
                         with col2:
-                            st.subheader(f"📍 {away_team} - Top Kapma Bölgeleri")
+                            st.subheader(f"📍 {away_team} - Top Kapma Bolgeleri")
                             recovery_data = {
-                                'Bölge': ['Kendi Yarı', 'Orta Saha', 'Rakip Yarı'],
-                                'Sayı': [
-                                    away_metrics['Top Kapma - Kendi Yarı'],
+                                'Bolge': ['Kendi Yari', 'Orta Saha', 'Rakip Yari'],
+                                'Sayi': [
+                                    away_metrics['Top Kapma - Kendi Yari'],
                                     away_metrics['Top Kapma - Orta Saha'],
-                                    away_metrics['Top Kapma - Rakip Yarı']
+                                    away_metrics['Top Kapma - Rakip Yari']
                                 ]
                             }
-                            if sum(recovery_data['Sayı']) > 0:
+                            if sum(recovery_data['Sayi']) > 0:
                                 fig, ax = plt.subplots()
-                                ax.pie(recovery_data['Sayı'], labels=recovery_data['Bölge'], autopct='%1.1f%%', 
+                                ax.pie(recovery_data['Sayi'], labels=recovery_data['Bolge'], autopct='%1.1f%%', 
                                        colors=['#ff6b6b', '#feca57', '#48dbfb'], startangle=90)
                                 ax.axis('equal')
                                 st.pyplot(fig)
                             else:
                                 st.info("Top kapma verisi yok.")
                         st.divider()
-                        st.subheader("🔥 Pres Yüksekliği Karşılaştırması")
+                        st.subheader("🔥 Pres Yuksekligi Karsilastirmasi")
                         pres_data = {
-                            'Takım': [home_team, away_team],
-                            'Rakip Yarı Sahada Pres Oranı (%)': [
-                                home_metrics['Rakip Yarı Sahada Pres Oranı'],
-                                away_metrics['Rakip Yarı Sahada Pres Oranı']
+                            'Takim': [home_team, away_team],
+                            'Rakip Yari Sahada Pres Orani (%)': [
+                                home_metrics['Rakip Yari Sahada Pres Orani'],
+                                away_metrics['Rakip Yari Sahada Pres Orani']
                             ]
                         }
                         df_pres = pd.DataFrame(pres_data)
                         fig, ax = plt.subplots(figsize=(8, 5))
-                        ax.bar(df_pres['Takım'], df_pres['Rakip Yarı Sahada Pres Oranı (%)'], color=['#00ffcc', '#ff6b6b'])
-                        ax.set_ylabel('Rakip Yarı Sahada Pres Oranı (%)')
-                        ax.set_title('Pres Yüksekliği Karşılaştırması')
+                        ax.bar(df_pres['Takim'], df_pres['Rakip Yari Sahada Pres Orani (%)'], color=['#00ffcc', '#ff6b6b'])
+                        ax.set_ylabel('Rakip Yari Sahada Pres Orani (%)')
+                        ax.set_title('Pres Yuksekligi Karsilastirmasi')
                         ax.set_ylim(0, 100)
-                        for i, v in enumerate(df_pres['Rakip Yarı Sahada Pres Oranı (%)']):
+                        for i, v in enumerate(df_pres['Rakip Yari Sahada Pres Orani (%)']):
                             ax.text(i, v + 2, f"{v}%", ha='center', color='white')
                         st.pyplot(fig)
-                        st.subheader("🎯 Pas Başarı Oranı Karşılaştırması")
+                        st.subheader("🎯 Pas Basari Orani Karsilastirmasi")
                         pass_data = {
-                            'Takım': [home_team, away_team],
-                            'Pas Başarı Oranı (%)': [
-                                home_metrics['Pas Başarı Oranı'],
-                                away_metrics['Pas Başarı Oranı']
+                            'Takim': [home_team, away_team],
+                            'Pas Basari Orani (%)': [
+                                home_metrics['Pas Basari Orani'],
+                                away_metrics['Pas Basari Orani']
                             ]
                         }
                         df_pass = pd.DataFrame(pass_data)
                         fig, ax = plt.subplots(figsize=(8, 5))
-                        ax.bar(df_pass['Takım'], df_pass['Pas Başarı Oranı (%)'], color=['#00ffcc', '#ff6b6b'])
-                        ax.set_ylabel('Pas Başarı Oranı (%)')
-                        ax.set_title('Pas Başarı Oranı Karşılaştırması')
+                        ax.bar(df_pass['Takim'], df_pass['Pas Basari Orani (%)'], color=['#00ffcc', '#ff6b6b'])
+                        ax.set_ylabel('Pas Basari Orani (%)')
+                        ax.set_title('Pas Basari Orani Karsilastirmasi')
                         ax.set_ylim(0, 100)
-                        for i, v in enumerate(df_pass['Pas Başarı Oranı (%)']):
+                        for i, v in enumerate(df_pass['Pas Basari Orani (%)']):
                             ax.text(i, v + 2, f"{v}%", ha='center', color='white')
                         st.pyplot(fig)
-                        st.success("✅ Takım stili analizi başarıyla tamamlandı!")
+                        st.success("✅ Takim stili analizi basariyla tamamlandi!")
                     except Exception as e:
-                        st.error(f"Takım stili analizi sırasında hata: {str(e)}")
-                        with st.expander("🔍 Hata Ayıklama: Ham Olay Verisi (İlk 5)"):
+                        st.error(f"Takim stili analizi sirasinda hata: {str(e)}")
+                        with st.expander("🔍 Hata Ayiklama: Ham Olay Verisi (Ilk 5)"):
                             if 'events' in st.session_state:
                                 st.dataframe(st.session_state['events'].head(5))
     else:
-        st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
+        st.info("Lutfen yukaridan bir turnuva secin, 'Maclari Listele' butonuna tiklayin ve bir mac secin, ardindan 'Olaylari Goster' butonuna tiklayin.")
