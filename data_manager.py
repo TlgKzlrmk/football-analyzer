@@ -166,17 +166,12 @@ def get_ss_player_stats(player_id: str):
 import os
 import requests
 
-# BSD API ayarları
 BZZOIRO_API_KEY = os.environ.get("BZZOIRO_API_KEY", "207e1f9f558429401834878cc51345e195cf6ab2")
 BZZOIRO_BASE_URL = "https://sports.bzzoiro.com"
 
 def get_bsd_events(date_from=None, date_to=None, league_id=None, limit=50):
     """
     BSD'den maç listesini çeker.
-    date_from: "2026-07-16T00:00:00Z" formatında
-    date_to: aynı formatta
-    league_id: lig ID'si (isteğe bağlı)
-    limit: max 200
     """
     url = f"{BZZOIRO_BASE_URL}/api/v2/events/"
     headers = {"X-API-Key": 207e1f9f558429401834878cc51345e195cf6ab2}
@@ -200,10 +195,9 @@ def get_bsd_events(date_from=None, date_to=None, league_id=None, limit=50):
 def get_bsd_odds(event_id=None, league_id=None, season_id=None, team_id=None, updated_after=None):
     """
     BSD'den bahis oranlarını çeker.
-    event_id: maç ID'si
     """
     url = f"{BZZOIRO_BASE_URL}/api/v2/odds/"
-    headers = {"X-API-Key": BZZOIRO_API_KEY}
+    headers = {"X-API-Key": 207e1f9f558429401834878cc51345e195cf6ab2}
     params = {}
     
     if event_id:
@@ -225,14 +219,5 @@ def get_bsd_odds(event_id=None, league_id=None, season_id=None, team_id=None, up
         print(f"BSD Odds hatası: {e}")
         return None
 
-def get_bsd_leagues():
-    """BSD'den tüm ligleri listeler."""
-    url = f"{BZZOIRO_BASE_URL}/api/v2/leagues/"
-    headers = {"X-API-Key": BZZOIRO_API_KEY}
-    try:
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print(f"BSD Leagues hatası: {e}")
-        return None
+# Lig listesi fonksiyonunu geçici olarak kaldır (çalışmıyorsa)
+# def get_bsd_leagues(): ...
