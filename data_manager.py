@@ -166,7 +166,7 @@ import requests
 import os
 
 # BSD API anahtarını Streamlit Cloud'daki secrets'tan al
-BZZOIRO_API_KEY = os.environ.get("BZZOIRO_API_KEY", "your_bsd_api_key_here")
+BZZOIRO_API_KEY = os.environ.get("BZZOIRO_API_KEY", "207e1f9f558429401834878cc51345e195cf6ab2")
 BZZOIRO_BASE_URL = "https://sports.bzzoiro.com/api/v1"  # Muhtemel base URL
 
 def get_bsd_live_matches():
