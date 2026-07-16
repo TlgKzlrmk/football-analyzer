@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from data_manager import *
 import os
+from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Pro Football AI", layout="wide")
 st.title("⚽ Pro Seviye AI Futbol Analiz")
@@ -272,7 +273,7 @@ else:
     if 'match_options' not in st.session_state or not st.session_state['match_options']:
         st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
-# ==================== PAS AĞI GÖRSELLEŞTİRME (KESİN ÇÖZÜM) ====================
+# ==================== PAS AĞI GÖRSELLEŞTİRME ====================
 st.markdown("---")
 st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
 
@@ -280,7 +281,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
     selected_match = st.session_state['selected_match']
     match_id = st.session_state.get('match_id', None)
     
-    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_final"):
+    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_network"):
         if not match_id:
             st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
         else:
@@ -294,20 +295,10 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Bu maç için olay verisi bulunamadı.")
                         st.stop()
                     
-                    # Pasları filtrele
-                    if 'type' not in events.columns:
-                        st.warning("'type' sütunu bulunamadı.")
-                        st.stop()
-                    
                     passes = events[events['type'] == 'Pass'].copy()
                     if passes.empty:
                         st.warning("Bu maçta pas verisi bulunamadı.")
                         st.stop()
-                    
-                    # Sadece ihtiyaç duyulan sütunları al
-                    needed_cols = ['player', 'player_name', 'player_id', 'location', 'pass', 'pass_recipient', 'recipient']
-                    existing_cols = [c for c in needed_cols if c in passes.columns]
-                    passes = passes[existing_cols].copy()
                     
                     import numpy as np
                     player_positions = {}
@@ -315,7 +306,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     
                     for idx, row in passes.iterrows():
                         try:
-                            # Oyuncu adını güvenli al
                             player = None
                             if 'player' in row and isinstance(row['player'], dict):
                                 player = str(row['player'].get('name', ''))
@@ -329,7 +319,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             if not player or player == '' or player == 'nan':
                                 continue
                             
-                            # Konum
                             if 'location' not in row:
                                 continue
                             loc = row['location']
@@ -342,14 +331,12 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             except (ValueError, TypeError):
                                 continue
                             
-                            # Pozisyonları güncelle
                             if player not in player_positions:
                                 player_positions[player] = {'x': [], 'y': [], 'total': 0}
                             player_positions[player]['x'].append(x)
                             player_positions[player]['y'].append(y)
                             player_positions[player]['total'] += 1
                             
-                            # Pas alıcısı
                             recipient = None
                             if 'pass' in row and isinstance(row['pass'], dict):
                                 pdata = row['pass']
@@ -369,16 +356,14 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                 if key not in pass_counts:
                                     pass_counts[key] = 0
                                 pass_counts[key] += 1
-                        except Exception as e:
+                        except:
                             continue
                     
-                    # Aktif oyuncular (en az 3 pas)
                     active = [p for p, data in player_positions.items() if data['total'] >= 3]
                     if len(active) < 2:
                         st.warning(f"Yeterli pas verisi yok (en az 3 pas yapan {len(active)} oyuncu, 2 gerekli).")
                         st.stop()
                     
-                    # Pozisyon ortalamaları
                     positions = {}
                     for p in active:
                         data = player_positions[p]
@@ -393,7 +378,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Pozisyon hesaplanamadı.")
                         st.stop()
                     
-                    # Bağlantılar (en az 2 pas)
                     connections = {}
                     for (p1, p2), count in pass_counts.items():
                         if p1 in positions and p2 in positions and count >= 2:
@@ -403,11 +387,9 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Yeterli pas bağlantısı yok (en az 2 pas).")
                         st.stop()
                     
-                    # SAHA ÇİZİMİ
                     fig, ax = plt.subplots(figsize=(12, 8))
                     ax.set_facecolor('#22312b')
                     
-                    # Saha çizgileri
                     ax.plot([0, 120, 120, 0, 0], [0, 0, 80, 80, 0], color='#c7d5cc', linewidth=2)
                     ax.plot([60, 60], [0, 80], color='#c7d5cc', linewidth=2)
                     circle = plt.Circle((60, 40), 9.15, color='#c7d5cc', fill=False, linewidth=2)
@@ -419,7 +401,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     ax.scatter(11, 40, color='#c7d5cc', s=50, zorder=1)
                     ax.scatter(109, 40, color='#c7d5cc', s=50, zorder=1)
                     
-                    # Oyuncular
                     for player, pos in positions.items():
                         x = pos['x']
                         y = pos['y']
@@ -427,7 +408,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         ax.scatter(x, y, s=size, color='#00ffcc', edgecolors='white', zorder=5, alpha=0.8)
                         ax.text(x, y-3, player, color='white', ha='center', fontsize=8, fontweight='bold')
                     
-                    # Bağlantılar
                     for (p1, p2), count in connections.items():
                         if p1 in positions and p2 in positions:
                             x1 = positions[p1]['x']
@@ -464,25 +444,85 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
 else:
     st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
 
-# ==================== Bzziro Sports Data (BSD) CANLI MAÇ ve ORANLAR ====================
+# ==================== BSD (Bzziro Sports Data) CANLI MAÇ ve ORANLAR ====================
 st.markdown("---")
 st.subheader("⚡ Bzziro Sports Data (BSD) Canlı Maç ve Oranlar")
 
-if st.button("📡 Canlı Maçları ve Oranları Getir"):
-    with st.spinner("BSD'den canlı veriler çekiliyor..."):
-        live_data = get_bsd_live_matches()
-        if live_data:
-            # Gelen verinin yapısına göre içeriği işlemen gerekecek.
-            # Örnek: Eğer veri bir liste olarak geliyorsa:
-            if isinstance(live_data, list):
-                for match in live_data:
-                    home_team = match.get('home_team', '?')
-                    away_team = match.get('away_team', '?')
-                    home_odds = match.get('home_odds', '-')
-                    draw_odds = match.get('draw_odds', '-')
-                    away_odds = match.get('away_odds', '-')
-                    st.write(f"**{home_team}** vs **{away_team}** -> 1: {home_odds}, X: {draw_odds}, 2: {away_odds}")
+col1, col2 = st.columns(2)
+
+with col1:
+    date_from = st.date_input("📅 Başlangıç Tarihi", value=datetime.now().date() - timedelta(days=1))
+    date_to = st.date_input("📅 Bitiş Tarihi", value=datetime.now().date() + timedelta(days=1))
+
+with col2:
+    league_id_input = st.number_input("🏆 Lig ID (isteğe bağlı)", value=0, min_value=0, step=1)
+    limit_input = st.slider("📊 Maksimum Maç Sayısı", min_value=10, max_value=200, value=50)
+
+if st.button("📡 BSD Canlı Maçları ve Oranları Getir"):
+    with st.spinner("BSD'den veriler çekiliyor..."):
+        # Maçları çek
+        date_from_str = date_from.strftime("%Y-%m-%d") + "T00:00:00Z"
+        date_to_str = date_to.strftime("%Y-%m-%d") + "T23:59:59Z"
+        
+        events_data = get_bsd_events(
+            date_from=date_from_str,
+            date_to=date_to_str,
+            league_id=league_id_input if league_id_input > 0 else None,
+            limit=limit_input
+        )
+        
+        if events_data:
+            st.success("Maçlar başarıyla çekildi!")
+            
+            # Veri yapısını göster (debug)
+            with st.expander("🔍 Ham Veri (Events)"):
+                st.json(events_data)
+            
+            # Eğer 'results' anahtarı varsa liste halindedir
+            events_list = events_data.get('results', events_data)
+            if isinstance(events_list, list) and events_list:
+                # Maçları tablo olarak göster
+                match_df = pd.DataFrame([{
+                    "ID": m.get('id'),
+                    "Ev Sahibi": m.get('home_team', '?'),
+                    "Deplasman": m.get('away_team', '?'),
+                    "Tarih": m.get('event_date', '?'),
+                    "Durum": m.get('status', '?')
+                } for m in events_list])
+                st.dataframe(match_df, use_container_width=True)
+                
+                # Kullanıcı bir maç seçsin
+                selected_match_id = st.selectbox(
+                    "🔍 Detayını Görmek İstediğiniz Maçın ID'sini Seçin",
+                    options=[m['id'] for m in events_list],
+                    format_func=lambda x: f"{x} - {next(m for m in events_list if m['id'] == x)['home_team']} vs {next(m for m in events_list if m['id'] == x)['away_team']}"
+                )
+                
+                if selected_match_id:
+                    # Oranları çek
+                    with st.spinner("Bahis oranları çekiliyor..."):
+                        odds_data = get_bsd_odds(event_id=selected_match_id)
+                        if odds_data:
+                            with st.expander("🔍 Ham Veri (Odds)"):
+                                st.json(odds_data)
+                            
+                            # Oranları işle
+                            odds_list = odds_data.get('results', odds_data)
+                            if isinstance(odds_list, list) and odds_list:
+                                # Oranları tablo haline getir
+                                odds_df = pd.DataFrame([{
+                                    "Bahis Şirketi": o.get('bookmaker', '?'),
+                                    "Piyasa": o.get('market', '?'),
+                                    "Sonuç": o.get('outcome', '?'),
+                                    "Oran": o.get('price', '?'),
+                                    "Handikap": o.get('line', '') if o.get('line') is not None else '-'
+                                } for o in odds_list])
+                                st.dataframe(odds_df, use_container_width=True)
+                            else:
+                                st.warning("Bu maç için oran verisi bulunamadı.")
+                        else:
+                            st.warning("Oranlar alınamadı.")
             else:
-                st.json(live_data)  # Veri yapısını görmek için
+                st.warning("Bu tarih aralığında maç bulunamadı.")
         else:
-            st.warning("Canlı maç verileri alınamadı.")
+            st.error("BSD'den veri alınamadı. API anahtarını kontrol edin.")
