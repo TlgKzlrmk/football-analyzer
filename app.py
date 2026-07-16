@@ -237,6 +237,7 @@ if st.button("📋 Maçları Listele"):
     
     # Buton
     if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster"):
+        
         with st.spinner("Olaylar çekiliyor..."):
             events = get_statsbomb_events(selected_match["match_id"])
             if not events.empty:
