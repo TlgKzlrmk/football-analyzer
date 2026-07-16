@@ -41,7 +41,7 @@ st.markdown(f"""
     h1, h2, h3, h4, p, div, span, label {{
         color: white !important;
     }}
-    /* DROPDOWN - KESİN ÇÖZÜM */
+    /* DROPDOWN - KESIN ÇÖZÜM */
     div[data-testid="stSelectbox"] label {{
         color: white !important;
     }}
