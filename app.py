@@ -463,3 +463,26 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             st.dataframe(st.session_state['events'].head(5))
 else:
     st.info("Lütfen yukarıdan bir turnuva seçin, 'Maçları Listele' butonuna tıklayın ve bir maç seçin, ardından 'Olayları Göster' butonuna tıklayın.")
+
+# ==================== Bzziro Sports Data (BSD) CANLI MAÇ ve ORANLAR ====================
+st.markdown("---")
+st.subheader("⚡ Bzziro Sports Data (BSD) Canlı Maç ve Oranlar")
+
+if st.button("📡 Canlı Maçları ve Oranları Getir"):
+    with st.spinner("BSD'den canlı veriler çekiliyor..."):
+        live_data = get_bsd_live_matches()
+        if live_data:
+            # Gelen verinin yapısına göre içeriği işlemen gerekecek.
+            # Örnek: Eğer veri bir liste olarak geliyorsa:
+            if isinstance(live_data, list):
+                for match in live_data:
+                    home_team = match.get('home_team', '?')
+                    away_team = match.get('away_team', '?')
+                    home_odds = match.get('home_odds', '-')
+                    draw_odds = match.get('draw_odds', '-')
+                    away_odds = match.get('away_odds', '-')
+                    st.write(f"**{home_team}** vs **{away_team}** -> 1: {home_odds}, X: {draw_odds}, 2: {away_odds}")
+            else:
+                st.json(live_data)  # Veri yapısını görmek için
+        else:
+            st.warning("Canlı maç verileri alınamadı.")
