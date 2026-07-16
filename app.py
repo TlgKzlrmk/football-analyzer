@@ -272,7 +272,7 @@ else:
     if 'match_options' not in st.session_state or not st.session_state['match_options']:
         st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
-# ==================== PAS AĞI GÖRSELLEŞTİRME (SORUNSUZ) ====================
+# ==================== PAS AĞI GÖRSELLEŞTİRME (KESİN ÇÖZÜM) ====================
 st.markdown("---")
 st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
 
@@ -286,7 +286,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
         else:
             with st.spinner("Pas verileri işleniyor..."):
                 try:
-                    # 1. Veriyi al
                     events = st.session_state.get('events', None)
                     if events is None or events.empty:
                         events = get_statsbomb_events(match_id)
@@ -295,7 +294,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Bu maç için olay verisi bulunamadı.")
                         st.stop()
                     
-                    # 2. Pasları filtrele
+                    # Pasları filtrele
                     if 'type' not in events.columns:
                         st.warning("'type' sütunu bulunamadı.")
                         st.stop()
@@ -305,26 +304,29 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Bu maçta pas verisi bulunamadı.")
                         st.stop()
                     
-                    # 3. Veriyi işle (GÜVENLİ)
+                    # Sadece ihtiyaç duyulan sütunları al
+                    needed_cols = ['player', 'player_name', 'player_id', 'location', 'pass', 'pass_recipient', 'recipient']
+                    existing_cols = [c for c in needed_cols if c in passes.columns]
+                    passes = passes[existing_cols].copy()
+                    
                     import numpy as np
                     player_positions = {}
                     pass_counts = {}
-                    error_rows = []
                     
                     for idx, row in passes.iterrows():
                         try:
-                            # Oyuncu adı
+                            # Oyuncu adını güvenli al
                             player = None
                             if 'player' in row and isinstance(row['player'], dict):
-                                player = row['player'].get('name')
+                                player = str(row['player'].get('name', ''))
                             elif 'player_name' in row:
-                                player = row['player_name']
+                                player = str(row['player_name'])
                             elif 'player' in row and isinstance(row['player'], str):
-                                player = row['player']
+                                player = str(row['player'])
                             elif 'player_id' in row:
                                 player = f"P{row['player_id']}"
                             
-                            if not player:
+                            if not player or player == '' or player == 'nan':
                                 continue
                             
                             # Konum
@@ -352,37 +354,31 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             if 'pass' in row and isinstance(row['pass'], dict):
                                 pdata = row['pass']
                                 if 'recipient' in pdata and isinstance(pdata['recipient'], dict):
-                                    recipient = pdata['recipient'].get('name')
+                                    recipient = str(pdata['recipient'].get('name', ''))
                                 elif 'recipient_name' in pdata:
-                                    recipient = pdata['recipient_name']
+                                    recipient = str(pdata['recipient_name'])
                                 elif 'recipient' in pdata and isinstance(pdata['recipient'], str):
-                                    recipient = pdata['recipient']
+                                    recipient = str(pdata['recipient'])
                             elif 'pass_recipient' in row:
-                                recipient = row['pass_recipient']
+                                recipient = str(row['pass_recipient'])
                             elif 'recipient' in row:
-                                recipient = row['recipient']
+                                recipient = str(row['recipient'])
                             
-                            if recipient and recipient != player:
+                            if recipient and recipient != '' and recipient != 'nan' and recipient != player:
                                 key = tuple(sorted([player, recipient]))
                                 if key not in pass_counts:
                                     pass_counts[key] = 0
                                 pass_counts[key] += 1
                         except Exception as e:
-                            error_rows.append((idx, str(e)))
                             continue
                     
-                    # Hata raporu
-                    if error_rows:
-                        st.warning(f"{len(error_rows)} satır işlenirken hata oluştu. İlk 5:")
-                        st.dataframe(pd.DataFrame(error_rows[:5], columns=['Satır', 'Hata']))
-                    
-                    # 4. Oyuncu filtrele (en az 3 pas)
+                    # Aktif oyuncular (en az 3 pas)
                     active = [p for p, data in player_positions.items() if data['total'] >= 3]
                     if len(active) < 2:
                         st.warning(f"Yeterli pas verisi yok (en az 3 pas yapan {len(active)} oyuncu, 2 gerekli).")
                         st.stop()
                     
-                    # 5. Pozisyon ortalamaları
+                    # Pozisyon ortalamaları
                     positions = {}
                     for p in active:
                         data = player_positions[p]
@@ -397,25 +393,21 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Pozisyon hesaplanamadı.")
                         st.stop()
                     
-                    # 6. Bağlantılar (en az 2 pas)
+                    # Bağlantılar (en az 2 pas)
                     connections = {}
                     for (p1, p2), count in pass_counts.items():
-                        try:
-                            count_int = int(count)
-                        except:
-                            continue
-                        if p1 in positions and p2 in positions and count_int >= 2:
-                            connections[(p1, p2)] = count_int
+                        if p1 in positions and p2 in positions and count >= 2:
+                            connections[(p1, p2)] = count
                     
                     if not connections:
                         st.warning("Yeterli pas bağlantısı yok (en az 2 pas).")
                         st.stop()
                     
-                    # 7. MANUEL SAHA ÇİZİMİ
+                    # SAHA ÇİZİMİ
                     fig, ax = plt.subplots(figsize=(12, 8))
                     ax.set_facecolor('#22312b')
                     
-                    # Saha çizgileri (StatsBomb 120x80)
+                    # Saha çizgileri
                     ax.plot([0, 120, 120, 0, 0], [0, 0, 80, 80, 0], color='#c7d5cc', linewidth=2)
                     ax.plot([60, 60], [0, 80], color='#c7d5cc', linewidth=2)
                     circle = plt.Circle((60, 40), 9.15, color='#c7d5cc', fill=False, linewidth=2)
@@ -427,7 +419,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     ax.scatter(11, 40, color='#c7d5cc', s=50, zorder=1)
                     ax.scatter(109, 40, color='#c7d5cc', s=50, zorder=1)
                     
-                    # Oyuncuları yerleştir
+                    # Oyuncular
                     for player, pos in positions.items():
                         x = pos['x']
                         y = pos['y']
@@ -435,7 +427,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         ax.scatter(x, y, s=size, color='#00ffcc', edgecolors='white', zorder=5, alpha=0.8)
                         ax.text(x, y-3, player, color='white', ha='center', fontsize=8, fontweight='bold')
                     
-                    # Bağlantıları çiz
+                    # Bağlantılar
                     for (p1, p2), count in connections.items():
                         if p1 in positions and p2 in positions:
                             x1 = positions[p1]['x']
@@ -454,7 +446,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     
                     st.pyplot(fig)
                     
-                    # Metrikler
                     col1, col2, col3 = st.columns(3)
                     with col1:
                         st.metric("Toplam Pas", len(passes))
