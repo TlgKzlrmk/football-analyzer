@@ -41,27 +41,33 @@ st.markdown(f"""
     h1, h2, h3, h4, p, div, span, label {{
         color: white !important;
     }}
-    /* DROPDOWN DÜZELTMESİ */
-    .stSelectbox div[data-baseweb="select"] {{
+    /* DROPDOWN - KESİN ÇÖZÜM */
+    div[data-testid="stSelectbox"] label {{
         color: white !important;
-        background-color: #1a1a1a !important;
-        border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
     }}
-    .stSelectbox ul {{
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] {{
         background-color: #1a1a1a !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
         border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: white !important;
     }}
-    .stSelectbox li {{
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+        color: white !important;
+    }}
+    div[data-testid="stSelectbox"] ul {{
+        background-color: #1a1a1a !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 10px !important;
+    }}
+    div[data-testid="stSelectbox"] ul li {{
         color: white !important;
         background-color: #1a1a1a !important;
         padding: 8px 16px !important;
     }}
-    .stSelectbox li:hover {{
+    div[data-testid="stSelectbox"] ul li:hover {{
         background-color: #333333 !important;
     }}
-    .stSelectbox li[aria-selected="true"] {{
+    div[data-testid="stSelectbox"] ul li[aria-selected="true"] {{
         background-color: #f5a623 !important;
         color: #1a1a1a !important;
     }}
