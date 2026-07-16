@@ -448,40 +448,36 @@ else:
 st.markdown("---")
 st.subheader("⚡ Bzziro Sports Data (BSD) Canlı Maç ve Oranlar")
 
+# Tarih seçimi
 col1, col2 = st.columns(2)
-
 with col1:
     date_from = st.date_input("📅 Başlangıç Tarihi", value=datetime.now().date() - timedelta(days=1))
+with col2:
     date_to = st.date_input("📅 Bitiş Tarihi", value=datetime.now().date() + timedelta(days=1))
 
-with col2:
-    league_id_input = st.number_input("🏆 Lig ID (isteğe bağlı)", value=0, min_value=0, step=1)
-    limit_input = st.slider("📊 Maksimum Maç Sayısı", min_value=10, max_value=200, value=50)
+limit_input = st.slider("📊 Maksimum Maç Sayısı", min_value=10, max_value=200, value=50)
 
 if st.button("📡 BSD Canlı Maçları ve Oranları Getir"):
     with st.spinner("BSD'den veriler çekiliyor..."):
-        # Maçları çek
         date_from_str = date_from.strftime("%Y-%m-%d") + "T00:00:00Z"
         date_to_str = date_to.strftime("%Y-%m-%d") + "T23:59:59Z"
         
+        # Tüm ligleri tara (league_id=None)
         events_data = get_bsd_events(
             date_from=date_from_str,
             date_to=date_to_str,
-            league_id=league_id_input if league_id_input > 0 else None,
+            league_id=None,
             limit=limit_input
         )
         
         if events_data:
             st.success("Maçlar başarıyla çekildi!")
             
-            # Veri yapısını göster (debug)
             with st.expander("🔍 Ham Veri (Events)"):
                 st.json(events_data)
             
-            # Eğer 'results' anahtarı varsa liste halindedir
             events_list = events_data.get('results', events_data)
             if isinstance(events_list, list) and events_list:
-                # Maçları tablo olarak göster
                 match_df = pd.DataFrame([{
                     "ID": m.get('id'),
                     "Ev Sahibi": m.get('home_team', '?'),
@@ -491,7 +487,6 @@ if st.button("📡 BSD Canlı Maçları ve Oranları Getir"):
                 } for m in events_list])
                 st.dataframe(match_df, use_container_width=True)
                 
-                # Kullanıcı bir maç seçsin
                 selected_match_id = st.selectbox(
                     "🔍 Detayını Görmek İstediğiniz Maçın ID'sini Seçin",
                     options=[m['id'] for m in events_list],
@@ -499,17 +494,14 @@ if st.button("📡 BSD Canlı Maçları ve Oranları Getir"):
                 )
                 
                 if selected_match_id:
-                    # Oranları çek
                     with st.spinner("Bahis oranları çekiliyor..."):
                         odds_data = get_bsd_odds(event_id=selected_match_id)
                         if odds_data:
                             with st.expander("🔍 Ham Veri (Odds)"):
                                 st.json(odds_data)
                             
-                            # Oranları işle
                             odds_list = odds_data.get('results', odds_data)
                             if isinstance(odds_list, list) and odds_list:
-                                # Oranları tablo haline getir
                                 odds_df = pd.DataFrame([{
                                     "Bahis Şirketi": o.get('bookmaker', '?'),
                                     "Piyasa": o.get('market', '?'),
@@ -523,6 +515,6 @@ if st.button("📡 BSD Canlı Maçları ve Oranları Getir"):
                         else:
                             st.warning("Oranlar alınamadı.")
             else:
-                st.warning("Bu tarih aralığında maç bulunamadı.")
+                st.warning("Bu tarih aralığında maç bulunamadı. Lütfen tarih aralığını genişletin.")
         else:
-            st.error("BSD'den veri alınamadı. API anahtarını kontrol edin.")
+            st.error("BSD'den veri alınamadı. Lütfen API anahtarını kontrol edin ve internet bağlantınızı kontrol edin.")
