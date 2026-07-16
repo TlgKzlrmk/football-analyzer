@@ -226,12 +226,10 @@ if st.button("📋 Maçları Listele"):
                     "away": away
                 })
             
-            # Maç seçimini session_state'e kaydet
             st.session_state['match_options'] = match_options
         else:
             st.error("Maç listesi alınamadı.")
 
-# Maç seçimi ve olay gösterme (her zaman görünür)
 if 'match_options' in st.session_state and st.session_state['match_options']:
     match_options = st.session_state['match_options']
     
@@ -307,9 +305,13 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             player_passes = {}
                             
                             for idx, row in passes.iterrows():
-                                player = row.get('player', {}).get('name', 'Bilinmeyen')
-                                if not player:
-                                    continue
+                                # --- DÜZELTİLMİŞ KISIM BAŞLANGIÇ ---
+                                # player alanını güvenli oku
+                                player_data = row.get('player', {})
+                                if isinstance(player_data, dict):
+                                    player = player_data.get('name', 'Bilinmeyen')
+                                else:
+                                    player = str(player_data) if player_data else 'Bilinmeyen'
                                 
                                 start_x = row.get('location', [None, None])[0]
                                 start_y = row.get('location', [None, None])[1]
@@ -323,12 +325,23 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                 player_positions[player]['y'].append(start_y)
                                 player_positions[player]['total_passes'] += 1
                                 
-                                recipient = row.get('pass', {}).get('recipient', {}).get('name', None)
+                                # recipient alanını güvenli oku
+                                pass_data = row.get('pass', {})
+                                if isinstance(pass_data, dict):
+                                    recipient_data = pass_data.get('recipient', {})
+                                    if isinstance(recipient_data, dict):
+                                        recipient = recipient_data.get('name', None)
+                                    else:
+                                        recipient = str(recipient_data) if recipient_data else None
+                                else:
+                                    recipient = None
+                                
                                 if recipient:
                                     key = tuple(sorted([player, recipient]))
                                     if key not in player_passes:
                                         player_passes[key] = 0
                                     player_passes[key] += 1
+                                # --- DÜZELTİLMİŞ KISIM SON ---
                             
                             active_players = [p for p, data in player_positions.items() 
                                              if data['total_passes'] >= 3]
