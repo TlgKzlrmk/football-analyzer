@@ -5,6 +5,7 @@ from data_manager import *
 import os
 from datetime import datetime, timedelta
 import requests
+import numpy as np
 
 # ==================== SAYFA YAPILANDIRMASI ====================
 st.set_page_config(
@@ -14,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== ARKA PLAN GÖRSELİ (DÜZELTİLMİŞ) ====================
+# ==================== ARKA PLAN GÖRSELİ ====================
 bg_image_url = "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
 
 page_bg_img = f"""
@@ -25,7 +26,6 @@ page_bg_img = f"""
     background-position: center;
     background-attachment: fixed;
 }}
-
 .stApp::before {{
     content: "";
     position: absolute;
@@ -36,16 +36,13 @@ page_bg_img = f"""
     background-color: rgba(0, 0, 0, 0.75);
     z-index: 0;
 }}
-
 .stApp > div {{
     position: relative;
     z-index: 1;
 }}
-
 h1, h2, h3, h4, p, div, span {{
     color: white !important;
 }}
-
 .stButton > button {{
     background-color: #f5a623 !important;
     color: #1a1a1a !important;
@@ -57,13 +54,11 @@ h1, h2, h3, h4, p, div, span {{
     transition: all 0.3s ease !important;
     box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4) !important;
 }}
-
 .stButton > button:hover {{
     transform: scale(1.05) !important;
     background-color: #ffb347 !important;
     box-shadow: 0 6px 20px rgba(245, 166, 35, 0.6) !important;
 }}
-
 .quick-btn > button {{
     background-color: rgba(255, 255, 255, 0.15) !important;
     color: white !important;
@@ -74,13 +69,11 @@ h1, h2, h3, h4, p, div, span {{
     backdrop-filter: blur(10px) !important;
     box-shadow: none !important;
 }}
-
 .quick-btn > button:hover {{
     background-color: rgba(245, 166, 35, 0.3) !important;
     border-color: #f5a623 !important;
     transform: scale(1.02) !important;
 }}
-
 .feature-card {{
     background: rgba(255, 255, 255, 0.05) !important;
     backdrop-filter: blur(10px) !important;
@@ -90,13 +83,11 @@ h1, h2, h3, h4, p, div, span {{
     text-align: center !important;
     transition: all 0.3s ease !important;
 }}
-
 .feature-card:hover {{
     transform: translateY(-5px) !important;
     background: rgba(255, 255, 255, 0.1) !important;
     border-color: #f5a623 !important;
 }}
-
 .match-card {{
     background: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(5px) !important;
@@ -105,7 +96,6 @@ h1, h2, h3, h4, p, div, span {{
     border-left: 4px solid #f5a623 !important;
     margin-bottom: 10px !important;
 }}
-
 .league-card {{
     background: rgba(0, 0, 0, 0.3) !important;
     backdrop-filter: blur(5px) !important;
@@ -257,89 +247,45 @@ else:
 
     # ==================== LİG LİSTESİ ====================
     LEAGUE_CODES = {
-        "Premier League": "PL",
-        "La Liga": "PD",
-        "Bundesliga": "BL1",
-        "Serie A": "SA",
-        "Ligue 1": "FL1",
-        "Championship": "ELC",
-        "La Liga2": "SD",
-        "Bundesliga 2": "BL2",
-        "Serie B": "SB",
-        "Ligue 2": "FL2",
-        "Eredivisie": "ED",
-        "Primeira Liga": "PPL",
-        "Süper Lig": "SL",
-        "Belçika Pro League": "BLG",
-        "İskoçya Premier": "SCO",
-        "Avusturya Bundesliga": "AUT",
-        "İsviçre Super League": "SUI",
-        "Yunanistan Super League": "GRE",
-        "Rusya Premier": "RUS",
-        "Ukrayna Premier": "UKR",
-        "Danimarka Superliga": "DEN",
-        "Norveç Eliteserien": "NOR",
-        "İsveç Allsvenskan": "SWE",
-        "Polonya Ekstraklasa": "POL",
-        "Hırvatistan HNL": "CRO",
-        "Sırbistan SuperLiga": "SRB",
-        "Çek Cumhuriyeti 1. Liga": "CZE",
-        "Romanya Liga 1": "ROU",
-        "Macaristan NB I": "HUN",
-        "Bulgaristan 1. Liga": "BUL",
-        "Slovakya Super Liga": "SVK",
-        "Slovenya PrvaLiga": "SVN",
-        "İrlanda Premier Division": "IRL",
-        "Şampiyonlar Ligi": "CL",
-        "Avrupa Ligi": "EL",
-        "Konferans Ligi": "ECL",
-        "Dünya Kupası": "WC",
-        "Avrupa Şampiyonası": "EC",
-        "Copa America": "CAM",
-        "Afrika Kupası": "AFC",
-        "Asya Kupası": "ASC",
-        "FA Cup": "FAC",
-        "EFL Cup": "FLC",
-        "DFB-Pokal": "DFB",
-        "Coppa Italia": "CIT",
-        "Coupe de France": "CDF",
-        "Copa del Rey": "CDR",
-        "Türkiye Kupası": "TKC",
+        "Premier League": "PL", "La Liga": "PD", "Bundesliga": "BL1",
+        "Serie A": "SA", "Ligue 1": "FL1", "Championship": "ELC",
+        "La Liga2": "SD", "Bundesliga 2": "BL2", "Serie B": "SB",
+        "Ligue 2": "FL2", "Eredivisie": "ED", "Primeira Liga": "PPL",
+        "Süper Lig": "SL", "Belçika Pro League": "BLG", "İskoçya Premier": "SCO",
+        "Avusturya Bundesliga": "AUT", "İsviçre Super League": "SUI",
+        "Yunanistan Super League": "GRE", "Rusya Premier": "RUS",
+        "Ukrayna Premier": "UKR", "Danimarka Superliga": "DEN",
+        "Norveç Eliteserien": "NOR", "İsveç Allsvenskan": "SWE",
+        "Polonya Ekstraklasa": "POL", "Hırvatistan HNL": "CRO",
+        "Sırbistan SuperLiga": "SRB", "Çek Cumhuriyeti 1. Liga": "CZE",
+        "Romanya Liga 1": "ROU", "Macaristan NB I": "HUN",
+        "Bulgaristan 1. Liga": "BUL", "Slovakya Super Liga": "SVK",
+        "Slovenya PrvaLiga": "SVN", "İrlanda Premier Division": "IRL",
+        "Şampiyonlar Ligi": "CL", "Avrupa Ligi": "EL", "Konferans Ligi": "ECL",
+        "Dünya Kupası": "WC", "Avrupa Şampiyonası": "EC",
+        "Copa America": "CAM", "Afrika Kupası": "AFC", "Asya Kupası": "ASC",
+        "FA Cup": "FAC", "EFL Cup": "FLC", "DFB-Pokal": "DFB",
+        "Coppa Italia": "CIT", "Coupe de France": "CDF",
+        "Copa del Rey": "CDR", "Türkiye Kupası": "TKC",
     }
 
     SS_LEAGUES = {
-        "Premier League": "premier-league",
-        "La Liga": "la-liga",
-        "Bundesliga": "bundesliga",
-        "Serie A": "serie-a",
-        "Ligue 1": "ligue-1",
-        "Championship": "championship",
-        "La Liga2": "la-liga-2",
-        "Bundesliga 2": "bundesliga-2",
-        "Serie B": "serie-b",
-        "Ligue 2": "ligue-2",
-        "Eredivisie": "eredivisie",
-        "Primeira Liga": "portugal-primeira-liga",
-        "Süper Lig": "süper-lig",
-        "Belçika Pro League": "belgian-pro-league",
-        "İskoçya Premier": "scottish-premiership",
-        "Avusturya Bundesliga": "austrian-bundesliga",
-        "İsviçre Super League": "swiss-super-league",
-        "Yunanistan Super League": "greek-super-league",
-        "Rusya Premier": "russian-premier-league",
-        "Ukrayna Premier": "ukrainian-premier-league",
-        "Danimarka Superliga": "danish-superliga",
-        "Norveç Eliteserien": "norwegian-eliteserien",
-        "İsveç Allsvenskan": "swedish-allsvenskan",
-        "Polonya Ekstraklasa": "polish-ekstraklasa",
-        "Hırvatistan HNL": "croatian-hnl",
-        "Sırbistan SuperLiga": "serbian-superliga",
-        "Çek Cumhuriyeti 1. Liga": "czech-1-liga",
-        "Romanya Liga 1": "romanian-liga-1",
-        "Macaristan NB I": "hungarian-nb-i",
-        "Bulgaristan 1. Liga": "bulgarian-1-liga",
-        "Slovakya Super Liga": "slovak-super-liga",
-        "Slovenya PrvaLiga": "slovenian-prvaliga",
+        "Premier League": "premier-league", "La Liga": "la-liga",
+        "Bundesliga": "bundesliga", "Serie A": "serie-a",
+        "Ligue 1": "ligue-1", "Championship": "championship",
+        "La Liga2": "la-liga-2", "Bundesliga 2": "bundesliga-2",
+        "Serie B": "serie-b", "Ligue 2": "ligue-2",
+        "Eredivisie": "eredivisie", "Primeira Liga": "portugal-primeira-liga",
+        "Süper Lig": "süper-lig", "Belçika Pro League": "belgian-pro-league",
+        "İskoçya Premier": "scottish-premiership", "Avusturya Bundesliga": "austrian-bundesliga",
+        "İsviçre Super League": "swiss-super-league", "Yunanistan Super League": "greek-super-league",
+        "Rusya Premier": "russian-premier-league", "Ukrayna Premier": "ukrainian-premier-league",
+        "Danimarka Superliga": "danish-superliga", "Norveç Eliteserien": "norwegian-eliteserien",
+        "İsveç Allsvenskan": "swedish-allsvenskan", "Polonya Ekstraklasa": "polish-ekstraklasa",
+        "Hırvatistan HNL": "croatian-hnl", "Sırbistan SuperLiga": "serbian-superliga",
+        "Çek Cumhuriyeti 1. Liga": "czech-1-liga", "Romanya Liga 1": "romanian-liga-1",
+        "Macaristan NB I": "hungarian-nb-i", "Bulgaristan 1. Liga": "bulgarian-1-liga",
+        "Slovakya Super Liga": "slovak-super-liga", "Slovenya PrvaLiga": "slovenian-prvaliga",
         "İrlanda Premier Division": "irish-premier-division",
     }
 
@@ -450,10 +396,8 @@ else:
     # ==================== UNDERSTAT ====================
     if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
         understat_mapping = {
-            "Premier League": "EPL",
-            "La Liga": "La_liga",
-            "Bundesliga": "Bundesliga",
-            "Serie A": "Serie_A",
+            "Premier League": "EPL", "La Liga": "La_liga",
+            "Bundesliga": "Bundesliga", "Serie A": "Serie_A",
             "Ligue 1": "Ligue_1"
         }
         if st.button("⚡ xG/xA Verileri (Understat)"):
@@ -599,7 +543,9 @@ else:
                         "display": f"{home} vs {away} ({match_date})",
                         "match_id": match_id,
                         "home": home,
-                        "away": away
+                        "away": away,
+                        "home_id": home_team.get('id') if isinstance(home_team, dict) else None,
+                        "away_id": away_team.get('id') if isinstance(away_team, dict) else None
                     })
                 st.session_state['match_options'] = match_options
             else:
@@ -613,6 +559,106 @@ else:
             key="sb_match_select"
         )
         selected_match = next(m for m in match_options if m["display"] == selected_match_label)
+        
+        # Tahmin butonları
+        st.markdown("---")
+        st.subheader("🧠 Eagle Pro - AI Tahmin Merkezi")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            predict_1x2 = st.button("📊 1X2 Tahmini", key="predict_1x2")
+            predict_ht = st.button("⏱️ İlk Yarı Tahmini", key="predict_ht")
+            predict_btts = st.button("🤝 KG Var/Yok Tahmini", key="predict_btts")
+        with col2:
+            predict_over15 = st.button("⚽ Alt/Üst 1.5", key="predict_over15")
+            predict_over25 = st.button("⚽ Alt/Üst 2.5", key="predict_over25")
+            predict_over35 = st.button("⚽ Alt/Üst 3.5", key="predict_over35")
+            predict_ai = st.button("🦅 AI Yorumcu", key="predict_ai")
+        
+        # Geçici olarak örnek tahmin sonuçları göster (gerçek model entegrasyonu sonra)
+        if any([predict_1x2, predict_ht, predict_btts, predict_over15, predict_over25, predict_over35, predict_ai]):
+            st.info("🧪 Şu an örnek verilerle tahmin yapılmaktadır. Gerçek model entegrasyonu için veri seti oluşturuluyor.")
+            
+            # Örnek tahmin sonuçları
+            st.subheader("📈 Tahmin Sonuçları")
+            
+            if predict_1x2:
+                st.markdown("#### 📊 1X2 Maç Sonucu")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("🏠 Ev Kazanır", "%68")
+                with col2:
+                    st.metric("🤝 Beraberlik", "%22")
+                with col3:
+                    st.metric("✈️ Deplasman Kazanır", "%10")
+            
+            if predict_ht:
+                st.markdown("#### ⏱️ İlk Yarı Sonucu")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("🏠 Ev Kazanır", "%45")
+                with col2:
+                    st.metric("🤝 Beraberlik", "%40")
+                with col3:
+                    st.metric("✈️ Deplasman Kazanır", "%15")
+            
+            if predict_btts:
+                st.markdown("#### 🤝 Karşılıklı Gol (BTTS)")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("✅ Evet (KG Var)", "%62")
+                with col2:
+                    st.metric("❌ Hayır (KG Yok)", "%38")
+            
+            if predict_over15:
+                st.markdown("#### ⚽ Alt/Üst 1.5")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("⬆️ Üst 1.5", "%78")
+                with col2:
+                    st.metric("⬇️ Alt 1.5", "%22")
+            
+            if predict_over25:
+                st.markdown("#### ⚽ Alt/Üst 2.5")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("⬆️ Üst 2.5", "%55")
+                with col2:
+                    st.metric("⬇️ Alt 2.5", "%45")
+            
+            if predict_over35:
+                st.markdown("#### ⚽ Alt/Üst 3.5")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("⬆️ Üst 3.5", "%30")
+                with col2:
+                    st.metric("⬇️ Alt 3.5", "%70")
+            
+            if predict_ai:
+                st.markdown("#### 🦅 AI Yorumcu")
+                commentary = generate_ai_commentary(
+                    selected_match['home'],
+                    selected_match['away'],
+                    {
+                        '1X2': {'tahmin': 'Ev Sahibi Kazanır', 'ev_sahibi_kazanma': 68, 'beraberlik': 22, 'deplasman_kazanma': 10},
+                        'HT': {'tahmin': 'Beraberlik', 'ev_sahibi_kazanma': 45, 'beraberlik': 40, 'deplasman_kazanma': 15},
+                        'btts': {'tahmin': 'Evet', 'evet': 62, 'hayir': 38},
+                        'over_under': {
+                            '1.5': {'tahmin': 'Üst', 'over': 78, 'under': 22},
+                            '2.5': {'tahmin': 'Üst', 'over': 55, 'under': 45},
+                            '3.5': {'tahmin': 'Alt', 'over': 30, 'under': 70}
+                        }
+                    },
+                    {
+                        'home_form_5': '4G-1B-0M (13 puan)',
+                        'away_form_5': '2G-1B-2M (7 puan)',
+                        'home_xg_5': '2.4',
+                        'away_xg_5': '1.2'
+                    }
+                )
+                st.markdown(commentary)
+        
+        # Olay gösterme butonu
         if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster", key="show_events"):
             with st.spinner("Olaylar çekiliyor..."):
                 events = get_statsbomb_events(selected_match["match_id"])
