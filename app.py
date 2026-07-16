@@ -226,43 +226,54 @@ if st.button("📋 Maçları Listele"):
                     "away": away
                 })
             
-            if match_options:
-                selected_match_label = st.selectbox(
-                    "📅 Maç Seç",
-                    options=[m["display"] for m in match_options]
-                )
-                selected_match = next(m for m in match_options if m["display"] == selected_match_label)
-                
-                if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster"):
-                    with st.spinner("Olaylar çekiliyor..."):
-                        events = get_statsbomb_events(selected_match["match_id"])
-                        if not events.empty:
-                            st.success(f"{len(events)} olay bulundu!")
-                            st.session_state['events'] = events
-                            st.session_state['selected_match'] = selected_match
-                            st.session_state['match_id'] = selected_match["match_id"]
-                            
-                            event_types = events['type'].unique().tolist()
-                            selected_types = st.multiselect(
-                                "🔍 Olay Türlerini Filtrele",
-                                options=event_types,
-                                default=event_types[:5] if len(event_types) >= 5 else event_types
-                            )
-                            
-                            if selected_types:
-                                filtered_events = events[events['type'].isin(selected_types)]
-                                st.dataframe(filtered_events, use_container_width=True)
-                            else:
-                                st.dataframe(events, use_container_width=True)
-                            
-                            st.subheader("📊 Olay Özeti")
-                            summary = events['type'].value_counts().reset_index()
-                            summary.columns = ['Olay Türü', 'Sayı']
-                            st.dataframe(summary, use_container_width=True)
-                        else:
-                            st.warning("Bu maç için olay verisi bulunamadı.")
+            # Maç seçimini session_state'e kaydet
+            st.session_state['match_options'] = match_options
         else:
             st.error("Maç listesi alınamadı.")
+
+# Maç seçimi ve olay gösterme (her zaman görünür)
+if 'match_options' in st.session_state and st.session_state['match_options']:
+    match_options = st.session_state['match_options']
+    
+    selected_match_label = st.selectbox(
+        "📅 Maç Seç",
+        options=[m["display"] for m in match_options],
+        key="sb_match_select"
+    )
+    selected_match = next(m for m in match_options if m["display"] == selected_match_label)
+    
+    if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster", key="show_events"):
+        with st.spinner("Olaylar çekiliyor..."):
+            events = get_statsbomb_events(selected_match["match_id"])
+            if not events.empty:
+                st.success(f"{len(events)} olay bulundu!")
+                st.session_state['events'] = events
+                st.session_state['selected_match'] = selected_match
+                st.session_state['match_id'] = selected_match["match_id"]
+                
+                event_types = events['type'].unique().tolist()
+                selected_types = st.multiselect(
+                    "🔍 Olay Türlerini Filtrele",
+                    options=event_types,
+                    default=event_types[:5] if len(event_types) >= 5 else event_types,
+                    key="event_types_filter"
+                )
+                
+                if selected_types:
+                    filtered_events = events[events['type'].isin(selected_types)]
+                    st.dataframe(filtered_events, use_container_width=True)
+                else:
+                    st.dataframe(events, use_container_width=True)
+                
+                st.subheader("📊 Olay Özeti")
+                summary = events['type'].value_counts().reset_index()
+                summary.columns = ['Olay Türü', 'Sayı']
+                st.dataframe(summary, use_container_width=True)
+            else:
+                st.warning("Bu maç için olay verisi bulunamadı.")
+else:
+    if 'match_options' not in st.session_state or not st.session_state['match_options']:
+        st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
 # ==================== PAS AĞI GÖRSELLEŞTİRME ====================
 st.markdown("---")
@@ -272,7 +283,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
     selected_match = st.session_state['selected_match']
     match_id = st.session_state.get('match_id', None)
     
-    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster"):
+    if st.button(f"📊 {selected_match['home']} - {selected_match['away']} Pas Ağını Göster", key="show_pass_network"):
         if not match_id:
             st.warning("Önce yukarıdan bir maç seçip 'Olayları Göster' butonuna tıklayın.")
         else:
