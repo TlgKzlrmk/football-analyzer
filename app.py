@@ -273,7 +273,7 @@ else:
     if 'match_options' not in st.session_state or not st.session_state['match_options']:
         st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
-# ==================== PAS AĞI GÖRSELLEŞTİRME ====================
+# ==================== PAS AĞI GÖRSELLEŞTİRME (DÜZELTİLMİŞ) ====================
 st.markdown("---")
 st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
 
@@ -305,8 +305,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             player_passes = {}
                             
                             for idx, row in passes.iterrows():
-                                # --- DÜZELTİLMİŞ KISIM BAŞLANGIÇ ---
-                                # player alanını güvenli oku
+                                # --- Güvenli oyuncu okuma ---
                                 player_data = row.get('player', {})
                                 if isinstance(player_data, dict):
                                     player = player_data.get('name', 'Bilinmeyen')
@@ -325,7 +324,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                 player_positions[player]['y'].append(start_y)
                                 player_positions[player]['total_passes'] += 1
                                 
-                                # recipient alanını güvenli oku
+                                # --- Güvenli hedef oyuncu okuma ---
                                 pass_data = row.get('pass', {})
                                 if isinstance(pass_data, dict):
                                     recipient_data = pass_data.get('recipient', {})
@@ -341,13 +340,13 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                     if key not in player_passes:
                                         player_passes[key] = 0
                                     player_passes[key] += 1
-                                # --- DÜZELTİLMİŞ KISIM SON ---
                             
+                            # En az 5 pas yapan oyuncuları filtrele (daha iyi görsel için)
                             active_players = [p for p, data in player_positions.items() 
-                                             if data['total_passes'] >= 3]
+                                             if data['total_passes'] >= 5]
                             
                             if len(active_players) < 2:
-                                st.warning("Yeterli pas verisi yok (en az 3 pas yapan oyuncu gerekli).")
+                                st.warning("Yeterli pas verisi yok (en az 5 pas yapan oyuncu gerekli).")
                             else:
                                 positions = {}
                                 for player in active_players:
@@ -358,11 +357,12 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                         'total_passes': data['total_passes']
                                     }
                                 
+                                # En az 3 bağlantıyı göster
                                 pass_connections = {k: v for k, v in player_passes.items() 
-                                                    if k[0] in active_players and k[1] in active_players and v >= 2}
+                                                    if k[0] in active_players and k[1] in active_players and v >= 3}
                                 
                                 if not pass_connections:
-                                    st.warning("Yeterli pas bağlantısı yok.")
+                                    st.warning("Yeterli pas bağlantısı yok (en az 3 pas).")
                                 else:
                                     pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
                                     fig, ax = pitch.draw(figsize=(12, 8))
