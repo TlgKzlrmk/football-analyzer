@@ -227,16 +227,43 @@ if st.button("📋 Maçları Listele"):
                 })
             
             if match_options:
-                selected_match_label = st.selectbox(
-                    "📅 Maç Seç",
-                    options=[m["display"] for m in match_options],
-                    key="selected_match_label"
+    # Maç seçimini doğrudan değişkene al
+    selected_match_label = st.selectbox(
+        "📅 Maç Seç",
+        options=[m["display"] for m in match_options]
+    )
+    # Seçilen maçı bul
+    selected_match = next(m for m in match_options if m["display"] == selected_match_label)
+    
+    # Buton
+    if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster"):
+        with st.spinner("Olaylar çekiliyor..."):
+            events = get_statsbomb_events(selected_match["match_id"])
+            if not events.empty:
+                st.success(f"{len(events)} olay bulundu!")
+                # Olay türleri
+                event_types = events['type'].unique().tolist()
+                selected_types = st.multiselect(
+                    "🔍 Olay Türlerini Filtrele",
+                    options=event_types,
+                    default=event_types[:5] if len(event_types) >= 5 else event_types
                 )
-                selected_match = next(m for m in match_options if m["display"] == selected_match_label)
+                if selected_types:
+                    filtered_events = events[events['type'].isin(selected_types)]
+                    st.dataframe(filtered_events, use_container_width=True)
+                else:
+                    st.dataframe(events, use_container_width=True)
+                st.subheader("📊 Olay Özeti")
+                summary = events['type'].value_counts().reset_index()
+                summary.columns = ['Olay Türü', 'Sayı']
+                st.dataframe(summary, use_container_width=True)
+                
+                # Pas ağı için session_state'e kaydet
+                st.session_state['events'] = events
                 st.session_state['selected_match'] = selected_match
                 st.session_state['match_id'] = selected_match["match_id"]
-                
-                if st.button(f"🚀 {selected_match['home']} vs {selected_match['away']} Olaylarını Göster", key="show_events"):
+            else:
+                st.warning("Bu maç için olay verisi bulunamadı.")
                     with st.spinner("Olaylar çekiliyor..."):
                         events = get_statsbomb_events(selected_match["match_id"])
                         if not events.empty:
