@@ -14,8 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== ARKA PLAN GÖRSELİ (BEŞİKTAŞ STADI + DENİZ) ====================
-# Değiştirmek istersen bg_image_url değişkenine kendi görsel URL'ni yaz.
+# ==================== ARKA PLAN GÖRSELİ ====================
 bg_image_url = "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
 
 page_bg_img = f"""
@@ -119,92 +118,72 @@ h1, h2, h3, h4, p, div, span {{
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# ==================== SESSION STATE YÖNETİMİ ====================
+# ==================== SESSION STATE ====================
 if 'page' not in st.session_state:
     st.session_state['page'] = 'home'
 
-# ==================== KARŞILAMA EKRANI (HOME) ====================
+# ==================== KARŞILAMA EKRANI ====================
 if st.session_state['page'] == 'home':
 
-    # Üst banner
-    col1, col2, col3 = st.columns([1, 3, 1])
+    st.markdown("""
+        <div style='text-align: center; padding: 20px 0 10px 0;'>
+            <h1 style='font-size: 60px; font-weight: 900; color: #f5a623; text-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);'>
+                🦅 EAGLE PRO
+            </h1>
+            <p style='font-size: 22px; color: #e0e0e0; margin-top: -10px;'>
+                AI Futbol Analiz ve Tahmin
+            </p>
+            <p style='font-size: 16px; color: #b0b0b0;'>
+                Veriyle Konuşan Analiz | 40+ Lig | Yapay Zeka Tahmin
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.divider()
+
+    st.markdown("### ⚡ Hızlı Erişim")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier Lig", key="quick_pl"):
+            st.session_state['quick_league'] = "Premier League"
+            st.session_state['page'] = 'analysis'
+            st.rerun()
     with col2:
-        st.markdown("""
-            <div style='text-align: center; padding: 20px 0 10px 0;'>
-                <h1 style='font-size: 60px; font-weight: 900; color: #f5a623; text-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);'>
-                    🦅 EAGLE PRO
-                </h1>
-                <p style='font-size: 22px; color: #e0e0e0; margin-top: -10px;'>
-                    AI Futbol Analiz ve Tahmin
-                </p>
-                <p style='font-size: 16px; color: #b0b0b0;'>
-                    Veriyle Konuşan Analiz | 40+ Lig | Yapay Zeka Tahmin
-                </p>
+        if st.button("🇪🇸 La Liga", key="quick_ll"):
+            st.session_state['quick_league'] = "La Liga"
+            st.session_state['page'] = 'analysis'
+            st.rerun()
+    with col3:
+        if st.button("🇩🇪 Bundesliga", key="quick_bund"):
+            st.session_state['quick_league'] = "Bundesliga"
+            st.session_state['page'] = 'analysis'
+            st.rerun()
+    with col4:
+        if st.button("🏆 Şampiyonlar Ligi", key="quick_ucl"):
+            st.session_state['quick_league'] = "Şampiyonlar Ligi"
+            st.session_state['page'] = 'analysis'
+            st.rerun()
+
+    st.divider()
+
+    st.markdown("### 📅 Bugünün Maçları")
+    sample_matches = [
+        {"home": "Arsenal", "away": "Chelsea", "time": "19:30"},
+        {"home": "Real Madrid", "away": "Barcelona", "time": "22:00"},
+        {"home": "Bayern Münih", "away": "Dortmund", "time": "20:30"},
+        {"home": "Milan", "away": "Inter", "time": "21:45"},
+        {"home": "PSG", "away": "Marseille", "time": "20:00"},
+    ]
+    for m in sample_matches:
+        st.markdown(f"""
+            <div class="match-card">
+                <span style='font-size: 18px; font-weight: bold;'>{m['home']} vs {m['away']}</span>
+                <span style='float: right; color: #f5a623; font-weight: bold;'>{m['time']}</span>
             </div>
         """, unsafe_allow_html=True)
 
     st.divider()
 
-    # Hızlı Erişim Butonları
-    st.markdown("### ⚡ Hızlı Erişim")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
-        if st.button("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier Lig", key="quick_pl"):
-            st.session_state['quick_league'] = "Premier League"
-            st.session_state['page'] = 'analysis'
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
-        if st.button("🇪🇸 La Liga", key="quick_ll"):
-            st.session_state['quick_league'] = "La Liga"
-            st.session_state['page'] = 'analysis'
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col3:
-        st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
-        if st.button("🇩🇪 Bundesliga", key="quick_bund"):
-            st.session_state['quick_league'] = "Bundesliga"
-            st.session_state['page'] = 'analysis'
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col4:
-        st.markdown('<div class="quick-btn">', unsafe_allow_html=True)
-        if st.button("🏆 Şampiyonlar Ligi", key="quick_ucl"):
-            st.session_state['quick_league'] = "Şampiyonlar Ligi"
-            st.session_state['page'] = 'analysis'
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    st.divider()
-
-    # Bugünün Maçları
-    st.markdown("### 📅 Bugünün Maçları")
-    try:
-        sample_matches = [
-            {"home": "Arsenal", "away": "Chelsea", "time": "19:30"},
-            {"home": "Real Madrid", "away": "Barcelona", "time": "22:00"},
-            {"home": "Bayern Münih", "away": "Dortmund", "time": "20:30"},
-            {"home": "Milan", "away": "Inter", "time": "21:45"},
-            {"home": "PSG", "away": "Marseille", "time": "20:00"},
-        ]
-        for m in sample_matches:
-            st.markdown(f"""
-                <div class="match-card">
-                    <span style='font-size: 18px; font-weight: bold;'>{m['home']} vs {m['away']}</span>
-                    <span style='float: right; color: #f5a623; font-weight: bold;'>{m['time']}</span>
-                </div>
-            """, unsafe_allow_html=True)
-    except:
-        st.info("Bugünün maç listesi şu anda hazırlanıyor. Lütfen daha sonra tekrar kontrol edin.")
-
-    st.divider()
-
-    # Lig Özetleri
     st.markdown("### 📊 Lig Özetleri")
     col1, col2 = st.columns(2)
     with col1:
@@ -224,7 +203,6 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    # Eagle Pro Özellikleri
     st.markdown("### 🧠 Eagle Pro ile Neler Yapabilirsin?")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -262,24 +240,22 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    # Keşfet Butonu
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("🚀 Keşfetmeye Başla", use_container_width=True):
             st.session_state['page'] = 'analysis'
             st.rerun()
 
-# ==================== ANALİZ EKRANI (ANALYSIS) ====================
+# ==================== ANALİZ EKRANI ====================
 else:
-    # Hızlı erişimden gelen lig seçimini kontrol et
+
     if 'quick_league' in st.session_state:
         default_league = st.session_state['quick_league']
-        # Seçimi temizle
         del st.session_state['quick_league']
     else:
         default_league = "Premier League"
 
-    # ==================== LİG VE TURNUVALAR ====================
+    # ==================== LİG LİSTESİ ====================
     LEAGUE_CODES = {
         "Premier League": "PL",
         "La Liga": "PD",
@@ -367,19 +343,15 @@ else:
         "İrlanda Premier Division": "irish-premier-division",
     }
 
-    ALL_LEAGUES = list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]
-    ALL_LEAGUES = sorted(set(ALL_LEAGUES))
+    ALL_LEAGUES = sorted(set(list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]))
 
-    # Başlık
     st.title("🦅 Eagle Pro - AI Futbol Analiz ve Tahmin")
     st.markdown("### Top 30+ Lig, 2. Ligler, Kupalar, UEFA & FIFA - Veriyle Konuşan Analiz")
 
-    # Geri dönüş butonu
     if st.button("🏠 Ana Sayfaya Dön"):
         st.session_state['page'] = 'home'
         st.rerun()
 
-    # Lig seçimi
     if default_league in ALL_LEAGUES:
         league_name = st.selectbox("🏆 Lig/Turnuva Seç", ALL_LEAGUES, index=ALL_LEAGUES.index(default_league))
     else:
@@ -475,7 +447,7 @@ else:
                 else:
                     st.error(f"'{league_name}' için veri kaynağı bulunamadı.")
 
-    # ==================== UNDERSTAT xG ====================
+    # ==================== UNDERSTAT ====================
     if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
         understat_mapping = {
             "Premier League": "EPL",
@@ -879,6 +851,7 @@ else:
                                     st.metric("⚡ Toplam xG", round(total_xg, 2))
                                 with col2:
                                     st.metric("📊 Ortalama xG/Şut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
+                            from mplsoccer import Pitch
                             pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
                             fig, ax = pitch.draw(figsize=(10, 7))
                             for idx, row in shots.iterrows():
