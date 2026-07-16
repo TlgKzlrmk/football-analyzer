@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== ARKA PLAN GÖRSELİ ====================
+# ==================== ARKA PLAN GÖRSELİ (DÜZELTİLMİŞ) ====================
 bg_image_url = "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
 
 page_bg_img = f"""
