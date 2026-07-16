@@ -9,58 +9,204 @@ st.set_page_config(page_title="Pro Football AI", layout="wide")
 st.title("⚽ Pro Seviye AI Futbol Analiz")
 st.markdown("### Top 30 Lig, 2. Ligler, Kupalar, UEFA & FIFA")
 
-# Football-Data.org lig kodları
+# ==================== LİG VE TURNUVALAR (GENİŞLETİLMİŞ) ====================
+# Football-Data.org lig kodları (erkek)
 LEAGUE_CODES = {
+    # Top 5 Lig
     "Premier League": "PL",
     "La Liga": "PD",
     "Bundesliga": "BL1",
     "Serie A": "SA",
     "Ligue 1": "FL1",
-    "Şampiyonlar Ligi": "CL",
-    "Avrupa Ligi": "EL",
-    "Dünya Kupası": "WC",
+    
+    # 2. Ligler
+    "Championship": "ELC",
     "La Liga2": "SD",
     "Bundesliga 2": "BL2",
     "Serie B": "SB",
     "Ligue 2": "FL2",
+    
+    # Diğer Avrupa Ligleri
     "Eredivisie": "ED",
     "Primeira Liga": "PPL",
-    "Süper Lig": "SL"
+    "Süper Lig": "SL",
+    "Belçika Pro League": "BLG",
+    "İskoçya Premier": "SCO",
+    "Avusturya Bundesliga": "AUT",
+    "İsviçre Super League": "SUI",
+    "Yunanistan Super League": "GRE",
+    "Rusya Premier": "RUS",
+    "Ukrayna Premier": "UKR",
+    "Danimarka Superliga": "DEN",
+    "Norveç Eliteserien": "NOR",
+    "İsveç Allsvenskan": "SWE",
+    "Polonya Ekstraklasa": "POL",
+    "Hırvatistan HNL": "CRO",
+    "Sırbistan SuperLiga": "SRB",
+    "Çek Cumhuriyeti 1. Liga": "CZE",
+    "Romanya Liga 1": "ROU",
+    "Macaristan NB I": "HUN",
+    "Bulgaristan 1. Liga": "BUL",
+    "Slovakya Super Liga": "SVK",
+    "Slovenya PrvaLiga": "SVN",
+    "İrlanda Premier Division": "IRL",
+    
+    # UEFA Turnuvaları
+    "Şampiyonlar Ligi": "CL",
+    "Avrupa Ligi": "EL",
+    "Konferans Ligi": "ECL",
+    
+    # Milli Takım Turnuvaları
+    "Dünya Kupası": "WC",
+    "Avrupa Şampiyonası": "EC",
+    "Copa America": "CAM",
+    "Afrika Kupası": "AFC",
+    "Asya Kupası": "ASC",
+    
+    # Yerel Kupalar
+    "FA Cup": "FAC",
+    "EFL Cup": "FLC",
+    "DFB-Pokal": "DFB",
+    "Coppa Italia": "CIT",
+    "Coupe de France": "CDF",
+    "Copa del Rey": "CDR",
+    "Türkiye Kupası": "TKC",
 }
 
-league_name = st.selectbox("🏆 Lig/Turnuva Seç", list(LEAGUE_CODES.keys()))
-league_code = LEAGUE_CODES[league_name]
+# sports-skills lig ID'leri (Football-Data.org'da olmayanlar için)
+SS_LEAGUES = {
+    "Premier League": "premier-league",
+    "La Liga": "la-liga",
+    "Bundesliga": "bundesliga",
+    "Serie A": "serie-a",
+    "Ligue 1": "ligue-1",
+    "Championship": "championship",
+    "La Liga2": "la-liga-2",
+    "Bundesliga 2": "bundesliga-2",
+    "Serie B": "serie-b",
+    "Ligue 2": "ligue-2",
+    "Eredivisie": "eredivisie",
+    "Primeira Liga": "portugal-primeira-liga",
+    "Süper Lig": "süper-lig",
+    "Belçika Pro League": "belgian-pro-league",
+    "İskoçya Premier": "scottish-premiership",
+    "Avusturya Bundesliga": "austrian-bundesliga",
+    "İsviçre Super League": "swiss-super-league",
+    "Yunanistan Super League": "greek-super-league",
+    "Rusya Premier": "russian-premier-league",
+    "Ukrayna Premier": "ukrainian-premier-league",
+    "Danimarka Superliga": "danish-superliga",
+    "Norveç Eliteserien": "norwegian-eliteserien",
+    "İsveç Allsvenskan": "swedish-allsvenskan",
+    "Polonya Ekstraklasa": "polish-ekstraklasa",
+    "Hırvatistan HNL": "croatian-hnl",
+    "Sırbistan SuperLiga": "serbian-superliga",
+    "Çek Cumhuriyeti 1. Liga": "czech-1-liga",
+    "Romanya Liga 1": "romanian-liga-1",
+    "Macaristan NB I": "hungarian-nb-i",
+    "Bulgaristan 1. Liga": "bulgarian-1-liga",
+    "Slovakya Super Liga": "slovak-super-liga",
+    "Slovenya PrvaLiga": "slovenian-prvaliga",
+    "İrlanda Premier Division": "irish-premier-division",
+}
 
+# Tüm ligleri birleştir (dropdown için)
+ALL_LEAGUES = list(LEAGUE_CODES.keys()) + [k for k in SS_LEAGUES.keys() if k not in LEAGUE_CODES]
+ALL_LEAGUES = sorted(set(ALL_LEAGUES))
+
+league_name = st.selectbox("🏆 Lig/Turnuva Seç", ALL_LEAGUES)
+
+# ==================== PUAN DURUMU ====================
 if st.button("📊 Puan Durumunu Göster"):
-    with st.spinner("Football-Data.org'dan veri çekiliyor..."):
-        table = get_league_table(league_code)
-        if "error" not in table and "standings" in table:
-            standings = table["standings"]
-            if standings:
-                rows = standings[0].get("table", [])
-                if rows:
-                    df = pd.DataFrame([{
-                        "Sıra": r["position"],
-                        "Takım": r["team"]["name"],
-                        "O": r["playedGames"],
-                        "G": r["won"],
-                        "B": r["draw"],
-                        "M": r["lost"],
-                        "A": r["goalsFor"],
-                        "Y": r["goalsAgainst"],
-                        "Puan": r["points"],
-                        "Avans": r["goalDifference"]
-                    } for r in rows])
-                    st.dataframe(df, use_container_width=True)
+    with st.spinner("Veri çekiliyor..."):
+        if league_name in LEAGUE_CODES:
+            league_code = LEAGUE_CODES[league_name]
+            table = get_league_table(league_code)
+            if "error" not in table and "standings" in table:
+                standings = table["standings"]
+                if standings:
+                    rows = standings[0].get("table", [])
+                    if rows:
+                        df = pd.DataFrame([{
+                            "Sıra": r["position"],
+                            "Takım": r["team"]["name"],
+                            "O": r["playedGames"],
+                            "G": r["won"],
+                            "B": r["draw"],
+                            "M": r["lost"],
+                            "A": r["goalsFor"],
+                            "Y": r["goalsAgainst"],
+                            "Puan": r["points"],
+                            "Avans": r["goalDifference"]
+                        } for r in rows])
+                        st.dataframe(df, use_container_width=True)
+                    else:
+                        st.warning("Bu lig için tablo verisi bulunamadı.")
                 else:
-                    st.warning("Bu lig için tablo verisi bulunamadı.")
+                    st.warning("Standings verisi boş.")
             else:
-                st.warning("Standings verisi boş.")
+                st.error("Football-Data.org'dan puan durumu alınamadı. Sports-skills deneniyor...")
+                ss_id = SS_LEAGUES.get(league_name)
+                if ss_id:
+                    ss_data = get_ss_standings(ss_id)
+                    if ss_data and "standings" in ss_data:
+                        standings = ss_data["standings"]
+                        if isinstance(standings, list) and len(standings) > 0:
+                            first = standings[0]
+                            entries = first.get("entries", first.get("table", []))
+                            if entries:
+                                df = pd.DataFrame([{
+                                    "Sıra": item.get("rank") or item.get("position", ""),
+                                    "Takım": item.get("team", {}).get("name", "") if isinstance(item.get("team"), dict) else str(item.get("team", "")),
+                                    "O": item.get("played") or item.get("playedGames", ""),
+                                    "G": item.get("win") or item.get("won", ""),
+                                    "B": item.get("draw", ""),
+                                    "M": item.get("lose") or item.get("lost", ""),
+                                    "A": item.get("goalsFor") or item.get("gf", ""),
+                                    "Y": item.get("goalsAgainst") or item.get("ga", ""),
+                                    "Puan": item.get("points", ""),
+                                    "Avans": item.get("goalDifference") or item.get("goalDiff", "")
+                                } for item in entries])
+                                st.dataframe(df, use_container_width=True)
+                            else:
+                                st.warning("Sports-skills'ten tablo verisi alınamadı.")
+                        else:
+                            st.warning("Sports-skills'ten standings verisi boş.")
+                    else:
+                        st.error("Her iki kaynaktan da veri alınamadı.")
         else:
-            st.error("Puan durumu alınamadı. API anahtarını veya lig kodunu kontrol edin.")
-            st.json(table)
+            ss_id = SS_LEAGUES.get(league_name)
+            if ss_id:
+                ss_data = get_ss_standings(ss_id)
+                if ss_data and "standings" in ss_data:
+                    standings = ss_data["standings"]
+                    if isinstance(standings, list) and len(standings) > 0:
+                        first = standings[0]
+                        entries = first.get("entries", first.get("table", []))
+                        if entries:
+                            df = pd.DataFrame([{
+                                "Sıra": item.get("rank") or item.get("position", ""),
+                                "Takım": item.get("team", {}).get("name", "") if isinstance(item.get("team"), dict) else str(item.get("team", "")),
+                                "O": item.get("played") or item.get("playedGames", ""),
+                                "G": item.get("win") or item.get("won", ""),
+                                "B": item.get("draw", ""),
+                                "M": item.get("lose") or item.get("lost", ""),
+                                "A": item.get("goalsFor") or item.get("gf", ""),
+                                "Y": item.get("goalsAgainst") or item.get("ga", ""),
+                                "Puan": item.get("points", ""),
+                                "Avans": item.get("goalDifference") or item.get("goalDiff", "")
+                            } for item in entries])
+                            st.dataframe(df, use_container_width=True)
+                        else:
+                            st.warning("Sports-skills'ten tablo verisi alınamadı.")
+                    else:
+                        st.warning("Sports-skills'ten standings verisi boş.")
+                else:
+                    st.error("Sports-skills'ten veri alınamadı. Lütfen lig ID'sini kontrol edin.")
+            else:
+                st.error(f"'{league_name}' için veri kaynağı bulunamadı.")
 
-# Understat xG
+# ==================== UNDERSTAT xG ====================
 if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"]:
     understat_mapping = {
         "Premier League": "EPL",
@@ -77,7 +223,7 @@ if league_name in ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 
             else:
                 st.warning("xG verisi alınamadı.")
 
-# FBref Takım İstatistikleri (sports-skills ile)
+# ==================== FBref ====================
 if st.button("📈 Takım İstatistikleri (FBref)"):
     with st.spinner("Veri çekiliyor (sports-skills üzerinden)..."):
         for season in ["2024", "2023"]:
@@ -104,7 +250,7 @@ if st.button("📈 Takım İstatistikleri (FBref)"):
         else:
             st.error("Hiçbir sezon için veri alınamadı.")
 
-# ============ sports-skills Test Alanı ============
+# ==================== sports-skills TEST ====================
 st.markdown("---")
 st.subheader("🧪 sports-skills Test Alanı")
 
@@ -172,7 +318,7 @@ with col2:
             else:
                 st.error("Takım bulunamadı.")
 
-# ==================== StatsBomb OLAY BAZLI VERİ ====================
+# ==================== StatsBomb ====================
 st.markdown("---")
 st.subheader("⚽ StatsBomb Olay Bazlı Veri (Açık Veri)")
 
@@ -273,7 +419,7 @@ else:
     if 'match_options' not in st.session_state or not st.session_state['match_options']:
         st.info("Lütfen yukarıdan bir turnuva seçip 'Maçları Listele' butonuna tıklayın.")
 
-# ==================== PAS AĞI GÖRSELLEŞTİRME ====================
+# ==================== PAS AĞI ====================
 st.markdown("---")
 st.subheader("🔗 Pas Ağı Analizi (StatsBomb)")
 
@@ -466,7 +612,7 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Bu maç için olay verisi bulunamadı.")
                         st.stop()
                     
-                    # --- 1. TEMEL MAÇ BİLGİLERİ ---
+                    # Maç bilgileri
                     st.subheader("📌 Maç Bilgileri")
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -474,51 +620,35 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     with col2:
                         st.metric("✈️ Deplasman", selected_match['away'])
                     with col3:
-                        # Maç tarihini bul
                         match_date = events['event_date'].iloc[0] if 'event_date' in events.columns else 'Tarih yok'
                         st.metric("📅 Tarih", match_date[:10] if len(str(match_date)) > 10 else str(match_date))
                     
                     st.divider()
                     
-                    # --- 2. TEMEL İSTATİSTİKLER ---
+                    # Temel istatistikler
                     st.subheader("📊 Temel İstatistikler")
                     
-                    # Olayları filtrele
                     passes = events[events['type'] == 'Pass'].copy() if 'type' in events.columns else pd.DataFrame()
                     shots = events[events['type'] == 'Shot'].copy() if 'type' in events.columns else pd.DataFrame()
                     carries = events[events['type'] == 'Carry'].copy() if 'type' in events.columns else pd.DataFrame()
                     pressures = events[events['type'] == 'Pressure'].copy() if 'type' in events.columns else pd.DataFrame()
                     
-                    # Takım bazlı istatistikler
                     col1, col2, col3, col4 = st.columns(4)
-                    
-                    # Pas istatistikleri
-                    total_passes = len(passes)
                     with col1:
-                        st.metric("🔄 Toplam Pas", total_passes)
-                    
-                    # Şut istatistikleri
-                    total_shots = len(shots)
+                        st.metric("🔄 Toplam Pas", len(passes))
                     with col2:
-                        st.metric("🎯 Toplam Şut", total_shots)
-                    
-                    # Pres istatistikleri
-                    total_pressures = len(pressures)
+                        st.metric("🎯 Toplam Şut", len(shots))
                     with col3:
-                        st.metric("🔥 Pres Sayısı", total_pressures)
-                    
-                    # Top taşıma
-                    total_carries = len(carries)
+                        st.metric("🔥 Pres Sayısı", len(pressures))
                     with col4:
-                        st.metric("🏃 Top Taşıma", total_carries)
+                        st.metric("🏃 Top Taşıma", len(carries))
                     
                     st.divider()
                     
-                    # --- 3. xG VE ŞUT HARİTASI ---
+                    # Şut haritası
                     st.subheader("🎯 xG ve Şut Haritası")
                     
                     if not shots.empty:
-                        # xG hesapla
                         shot_xg = []
                         for idx, row in shots.iterrows():
                             shot_data = row.get('shot', {})
@@ -538,12 +668,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             with col2:
                                 st.metric("📊 Ortalama xG/Şut", round(total_xg / len(shot_xg), 2) if shot_xg else 0)
                         
-                        # Şut haritasını göster
-                        st.caption("⬇️ Şut haritası aşağıda gösteriliyor")
-                        # Mevcut şut haritası kodunu burada kullanabiliriz
-                        import matplotlib.pyplot as plt
-                        from mplsoccer import Pitch
-                        
                         pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
                         fig, ax = pitch.draw(figsize=(10, 7))
                         
@@ -553,13 +677,11 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                 x = float(location[0]) if location[0] is not None else None
                                 y = float(location[1]) if location[1] is not None else None
                                 if x is not None and y is not None:
-                                    # Gol mü?
                                     shot_data = row.get('shot', {})
                                     outcome = shot_data.get('outcome', {}).get('name', '') if isinstance(shot_data, dict) else ''
                                     is_goal = outcome == 'Goal'
                                     color = 'red' if is_goal else 'blue'
                                     ax.scatter(x, y, s=150, color=color, alpha=0.7, edgecolors='white')
-                                    # xG değerini yaz
                                     if isinstance(shot_data, dict):
                                         xg_val = shot_data.get('statsbomb_xg', None)
                                         if xg_val is not None:
@@ -572,10 +694,9 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     
                     st.divider()
                     
-                    # --- 4. PAS AĞI ---
+                    # Pas ağı
                     st.subheader("🔗 Pas Ağı")
                     if not passes.empty:
-                        # Pas ağını göster (mevcut pas ağı kodunu kullan)
                         import numpy as np
                         player_positions = {}
                         pass_counts = {}
@@ -666,11 +787,10 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     
                     st.divider()
                     
-                    # --- 5. OYUNCU İSTATİSTİKLERİ (ÖZET) ---
+                    # Öne çıkan oyuncular
                     st.subheader("🏅 Öne Çıkan Oyuncular")
                     
                     if not passes.empty:
-                        # En çok pas yapan oyuncular
                         pass_counts_by_player = {}
                         for idx, row in passes.iterrows():
                             player = None
@@ -690,7 +810,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                             st.dataframe(df_passes, use_container_width=True, hide_index=True)
                     
                     if not shots.empty:
-                        # En çok şut çeken oyuncular
                         shot_counts_by_player = {}
                         for idx, row in shots.iterrows():
                             player = None
@@ -741,7 +860,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         st.warning("Bu maç için olay verisi bulunamadı.")
                         st.stop()
                     
-                    # Maçtaki takımları bul
                     teams = []
                     if 'team' in events.columns:
                         teams = events['team'].unique().tolist()
@@ -755,20 +873,16 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     home_team = teams[0] if teams else selected_match['home']
                     away_team = teams[1] if len(teams) > 1 else selected_match['away']
                     
-                    # Her takım için verileri filtrele
                     home_events = events[events['team'] == home_team].copy() if 'team' in events.columns else events[events['team_name'] == home_team].copy()
                     away_events = events[events['team'] == away_team].copy() if 'team' in events.columns else events[events['team_name'] == away_team].copy()
                     
-                    # Stil metriklerini hesapla
                     def calculate_style_metrics(team_events, team_name):
                         metrics = {}
                         
-                        # 1. Pas istatistikleri
                         passes = team_events[team_events['type'] == 'Pass'].copy() if 'type' in team_events.columns else pd.DataFrame()
                         total_passes = len(passes)
                         metrics['Toplam Pas'] = total_passes
                         
-                        # Başarılı pas yüzdesi (yaklaşık)
                         if total_passes > 0:
                             successful_passes = 0
                             for idx, row in passes.iterrows():
@@ -780,15 +894,12 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         else:
                             metrics['Pas Başarı Oranı'] = 0
                         
-                        # 2. Pres istatistikleri
                         pressures = team_events[team_events['type'] == 'Pressure'].copy() if 'type' in team_events.columns else pd.DataFrame()
                         metrics['Toplam Pres'] = len(pressures)
                         
-                        # 3. Şut istatistikleri
                         shots = team_events[team_events['type'] == 'Shot'].copy() if 'type' in team_events.columns else pd.DataFrame()
                         metrics['Toplam Şut'] = len(shots)
                         
-                        # xG hesapla
                         shot_xg = []
                         for idx, row in shots.iterrows():
                             shot_data = row.get('shot', {})
@@ -801,25 +912,22 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                                         pass
                         metrics['Toplam xG'] = round(sum(shot_xg), 2) if shot_xg else 0
                         
-                        # 4. Top taşıma
                         carries = team_events[team_events['type'] == 'Carry'].copy() if 'type' in team_events.columns else pd.DataFrame()
                         metrics['Top Taşıma'] = len(carries)
                         
-                        # 5. Pres yüksekliği (rakip yarı sahada pres)
                         high_pressures = 0
                         for idx, row in pressures.iterrows():
                             loc = row.get('location', [])
                             if len(loc) >= 2:
                                 try:
                                     x = float(loc[0])
-                                    if x > 60:  # Rakip yarı saha
+                                    if x > 60:
                                         high_pressures += 1
                                 except:
                                     pass
                         metrics['Rakip Yarı Sahada Pres'] = high_pressures
                         metrics['Rakip Yarı Sahada Pres Oranı'] = round((high_pressures / metrics['Toplam Pres'] * 100), 1) if metrics['Toplam Pres'] > 0 else 0
                         
-                        # 6. Top kapma bölgeleri
                         ball_recoveries = team_events[team_events['type'] == 'Ball Recovery'].copy() if 'type' in team_events.columns else pd.DataFrame()
                         recovery_zones = {'kendi_yarı': 0, 'orta_saha': 0, 'rakip_yarı': 0}
                         for idx, row in ball_recoveries.iterrows():
@@ -839,20 +947,15 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         metrics['Top Kapma - Orta Saha'] = recovery_zones['orta_saha']
                         metrics['Top Kapma - Rakip Yarı'] = recovery_zones['rakip_yarı']
                         
-                        # 7. Aksiyon hızı (top kaybı sonrası geri kazanma)
-                        # Yaklaşık: top kaybı ile sonraki pres arasındaki süre
-                        metrics['Aksiyon Hızı (Skor)'] = "Orta"  # Basit skorlama
+                        metrics['Aksiyon Hızı (Skor)'] = "Orta"
                         
                         return metrics
                     
-                    # Her iki takım için metrikleri hesapla
                     home_metrics = calculate_style_metrics(home_events, home_team)
                     away_metrics = calculate_style_metrics(away_events, away_team)
                     
-                    # Sonuçları göster
                     st.subheader(f"⚽ {home_team} vs {away_team} - Stil Karşılaştırması")
                     
-                    # Tablo olarak göster
                     comparison_data = {
                         "Metrik": list(home_metrics.keys()),
                         home_team: list(home_metrics.values()),
@@ -863,10 +966,8 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     
                     st.divider()
                     
-                    # --- GÖRSELLEŞTİRMELER ---
                     col1, col2 = st.columns(2)
                     
-                    # 1. Top Kapma Bölgeleri (Pasta grafiği - Ev sahibi)
                     with col1:
                         st.subheader(f"📍 {home_team} - Top Kapma Bölgeleri")
                         recovery_data = {
@@ -886,7 +987,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         else:
                             st.info("Top kapma verisi yok.")
                     
-                    # 2. Top Kapma Bölgeleri (Pasta grafiği - Deplasman)
                     with col2:
                         st.subheader(f"📍 {away_team} - Top Kapma Bölgeleri")
                         recovery_data = {
@@ -908,7 +1008,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                     
                     st.divider()
                     
-                    # --- PRES YÜKSEKLİĞİ KARŞILAŞTIRMASI (Bar chart) ---
                     st.subheader("🔥 Pres Yüksekliği Karşılaştırması")
                     pres_data = {
                         'Takım': [home_team, away_team],
@@ -927,7 +1026,6 @@ if 'selected_match' in st.session_state and st.session_state['selected_match']:
                         ax.text(i, v + 2, f"{v}%", ha='center', color='white')
                     st.pyplot(fig)
                     
-                    # --- PAS BAŞARI ORANI (Bar chart) ---
                     st.subheader("🎯 Pas Başarı Oranı Karşılaştırması")
                     pass_data = {
                         'Takım': [home_team, away_team],
