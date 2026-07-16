@@ -41,36 +41,59 @@ st.markdown(f"""
     h1, h2, h3, h4, p, div, span, label {{
         color: white !important;
     }}
-    /* DROPDOWN - KESIN ÇÖZÜM */
-    div[data-testid="stSelectbox"] label {{
-        color: white !important;
+
+    /* ===== DROPDOWN MENÜ - KESİN ÇÖZÜM ===== */
+    /* Tüm dropdown container'ları */
+    div[data-testid="stSelectbox"] {{
+        background-color: transparent !important;
     }}
+    /* Dropdown butonu (seçili olan) */
     div[data-testid="stSelectbox"] div[data-baseweb="select"] {{
         background-color: #1a1a1a !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
         border-radius: 10px !important;
         color: white !important;
     }}
     div[data-testid="stSelectbox"] div[data-baseweb="select"] div {{
         color: white !important;
     }}
-    div[data-testid="stSelectbox"] ul {{
+    /* Dropdown açılan liste (popover) */
+    div[data-testid="stSelectbox"] ul,
+    div[data-testid="stSelectbox"] div[role="listbox"],
+    div[data-baseweb="popover"] ul,
+    div[data-baseweb="popover"] div[role="listbox"] {{
         background-color: #1a1a1a !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
         border-radius: 10px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8) !important;
     }}
-    div[data-testid="stSelectbox"] ul li {{
+    /* Dropdown öğeleri */
+    div[data-testid="stSelectbox"] ul li,
+    div[data-testid="stSelectbox"] div[role="listbox"] li,
+    div[data-baseweb="popover"] ul li,
+    div[data-baseweb="popover"] div[role="listbox"] li {{
         color: white !important;
         background-color: #1a1a1a !important;
-        padding: 8px 16px !important;
+        padding: 10px 16px !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
     }}
-    div[data-testid="stSelectbox"] ul li:hover {{
+    div[data-testid="stSelectbox"] ul li:hover,
+    div[data-testid="stSelectbox"] div[role="listbox"] li:hover,
+    div[data-baseweb="popover"] ul li:hover,
+    div[data-baseweb="popover"] div[role="listbox"] li:hover {{
         background-color: #333333 !important;
+        color: white !important;
     }}
-    div[data-testid="stSelectbox"] ul li[aria-selected="true"] {{
+    /* Seçili öğe */
+    div[data-testid="stSelectbox"] ul li[aria-selected="true"],
+    div[data-testid="stSelectbox"] div[role="listbox"] li[aria-selected="true"],
+    div[data-baseweb="popover"] ul li[aria-selected="true"],
+    div[data-baseweb="popover"] div[role="listbox"] li[aria-selected="true"] {{
         background-color: #f5a623 !important;
         color: #1a1a1a !important;
+        font-weight: 700 !important;
     }}
+
     /* BUTON */
     .stButton > button {{
         background: linear-gradient(135deg, #f5a623, #e69500) !important;
