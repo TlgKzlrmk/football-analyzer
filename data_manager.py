@@ -68,7 +68,51 @@ def get_league_table(league_code):
     
     return {"error": "Tüm kaynaklardan veri alınamadı."}
 
-# ==================== HİBRİT xG ====================
+# ==================== MAÇ LİSTESİ (HİBRİT) ====================
+def get_league_matches(league_code, season="2025"):
+    """Football-Data.org'dan lig maçlarını çeker, yoksa sports-skills dener."""
+    cache_file = f"{CACHE_DIR}/matches_{league_code}.json"
+    if os.path.exists(cache_file):
+        with open(cache_file, "r") as f:
+            return json.load(f)
+    
+    # 1. Football-Data.org
+    url = f"{FOOTBALL_DATA_BASE}/competitions/{league_code}/matches"
+    headers = {"X-Auth-Token": API_KEY_FOOTBALL_DATA}
+    params = {"season": season}
+    try:
+        resp = requests.get(url, headers=headers, params=params, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        matches = data.get("matches", [])
+        if matches:
+            with open(cache_file, "w") as f:
+                json.dump(matches, f)
+            return matches
+    except:
+        pass
+    
+    # 2. sports-skills yedek
+    from sports_skills import football
+    try:
+        league_map = {
+            "PL": "premier-league", "PD": "la-liga", "BL1": "bundesliga",
+            "SA": "serie-a", "FL1": "ligue-1", "ELC": "championship",
+        }
+        ss_league = league_map.get(league_code, league_code.lower())
+        season_id = f"{ss_league}-2025"
+        result = football.get_season_fixtures(season_id=season_id)
+        if result and "data" in result:
+            fixtures = result["data"].get("fixtures", [])
+            with open(cache_file, "w") as f:
+                json.dump(fixtures, f)
+            return fixtures
+    except:
+        pass
+    
+    return []
+
+# ==================== xG (HİBRİT) ====================
 def get_xg_from_understat(league, season="2024"):
     try:
         understat = sd.Understat()
