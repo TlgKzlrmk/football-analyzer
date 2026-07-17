@@ -308,29 +308,36 @@ else:
     league_code = LEAGUE_CODES.get(league_name, None)
     matches_list = []
 
+    # Mevcut yılı al (2026)
+    current_year = datetime.now().year
+    season = str(current_year)  # "2026"
+
     if league_code:
-        # Football-Data.org'dan çek
-        matches = get_league_matches(league_code, season="2025")
-        if matches:
-            # Maçları formatla
-            for m in matches:
-                home = m.get("homeTeam", {}).get("name", "?")
-                away = m.get("awayTeam", {}).get("name", "?")
-                date = m.get("utcDate", "Tarih yok")[:10]
-                time = m.get("utcDate", "00:00")[11:16]
-                matches_list.append({"home": home, "away": away, "date": date, "time": time})
+        # Özel durum: Dünya Kupası (WC) veya diğer turnuvalar
+        if league_code == "WC":
+            st.warning(f"⚠️ {current_year} Dünya Kupası henüz başlamamıştır veya maç verileri yayınlanmamıştır.")
+        else:
+            # Football-Data.org'dan çek (sezon 2026)
+            matches = get_league_matches(league_code, season=season)
+            if matches:
+                for m in matches:
+                    home = m.get("homeTeam", {}).get("name", "?")
+                    away = m.get("awayTeam", {}).get("name", "?")
+                    date = m.get("utcDate", "Tarih yok")[:10]
+                    time = m.get("utcDate", "00:00")[11:16]
+                    matches_list.append({"home": home, "away": away, "date": date, "time": time})
     
-    # Eğer Football-Data.org boş geldiyse, sports-skills dene
-    if not matches_list:
+    # Eğer Football-Data.org boş geldiyse, sports-skills dene (sadece ligler için)
+    if not matches_list and league_code and league_code != "WC":
         ss_id = SS_LEAGUES.get(league_name, None)
         if ss_id:
             from sports_skills import football
             try:
-                season_id = f"{ss_id}-2025"
+                season_id = f"{ss_id}-{season}"
                 result = football.get_season_fixtures(season_id=season_id)
                 if result and "data" in result:
                     fixtures = result["data"].get("fixtures", [])
-                    for f in fixtures[:20]:  # max 20 maç
+                    for f in fixtures[:20]:
                         home = f.get("home_team", "?")
                         away = f.get("away_team", "?")
                         date = f.get("date", "Tarih yok")[:10]
@@ -340,7 +347,7 @@ else:
                 pass
 
     if not matches_list:
-        st.info("📢 Bu lig için maç bulunamadı. Sezon başlamamış olabilir.")
+        st.info(f"📢 Bu lig/turnuva için {season} sezonunda maç bulunamadı. Sezon başlamamış olabilir veya veriler yayınlanmamıştır.")
     else:
         for m in matches_list:
             col1, col2, col3 = st.columns([3, 1, 1])
@@ -365,7 +372,7 @@ else:
 
         # Puan Durumu (renkli)
         st.markdown("### 📊 Puan Durumu")
-        if league_code:
+        if league_code and league_code != "WC":
             table_data = get_league_table(league_code)
             if "error" not in table_data and "standings" in table_data:
                 standings = table_data["standings"]
@@ -402,9 +409,9 @@ else:
                 else:
                     st.warning("Puan durumu verisi boş.")
             else:
-                st.warning("⚠️ 2026/2027 sezonu henüz başlamamış olabilir. Geçmiş sezon verileri gösteriliyor.")
+                st.warning(f"⚠️ {season} sezonu henüz başlamamış olabilir. Geçmiş sezon verileri gösteriliyor.")
                 if ss_id:
-                    ss_data = get_ss_standings(f"{ss_id}-2025")
+                    ss_data = get_ss_standings(f"{ss_id}-{season}")
                     if ss_data and "standings" in ss_data:
                         standings = ss_data["standings"]
                         if standings:
@@ -424,6 +431,8 @@ else:
                                     "Avans": item.get("goalDifference", 0)
                                 } for i, item in enumerate(entries)])
                                 st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("📊 Dünya Kupası için puan durumu bilgisi mevcut değildir.")
 
         # AI Tahminleri
         st.markdown("### 🤖 Yapay Zeka Yüzdesel Tahminler")
