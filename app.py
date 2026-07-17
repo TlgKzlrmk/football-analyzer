@@ -14,68 +14,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== KOYU TEMA (ARKA PLAN AÇIK) + DROPDOWN KESİN ÇÖZÜM ====================
+# ==================== KOYU TEMA (ARKA PLAN AÇIK) ====================
 st.markdown("""
 <style>
-    /* Ana arka plan */
     .stApp {
         background-color: #1a1a1a !important;
     }
-    /* Tüm yazılar beyaz */
     h1, h2, h3, h4, p, div, span, label {
         color: white !important;
     }
-    
-    /* ===== DROPDOWN - KESİN ÇÖZÜM (TÜM POPOVER'LAR) ===== */
-    /* Popover arka planı */
-    div[data-baseweb="popover"] {
-        background-color: #222222 !important;
-        border: 1px solid #444444 !important;
-        border-radius: 10px !important;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.8) !important;
-    }
-    /* Popover içindeki liste */
-    div[data-baseweb="popover"] ul,
-    div[data-baseweb="popover"] div[role="listbox"] {
-        background-color: #222222 !important;
-        color: white !important;
-        padding: 4px 0 !important;
-    }
-    /* Liste elemanları */
-    div[data-baseweb="popover"] li,
-    div[data-baseweb="popover"] div[role="option"] {
-        background-color: #222222 !important;
-        color: white !important;
-        padding: 10px 16px !important;
-        border-bottom: 1px solid #333333 !important;
-        font-size: 16px !important;
-    }
-    /* Hover */
-    div[data-baseweb="popover"] li:hover,
-    div[data-baseweb="popover"] div[role="option"]:hover {
-        background-color: #3a3a3a !important;
-        color: white !important;
-    }
-    /* Seçili eleman */
-    div[data-baseweb="popover"] li[aria-selected="true"],
-    div[data-baseweb="popover"] div[role="option"][aria-selected="true"] {
-        background-color: #f5a623 !important;
-        color: #1a1a1a !important;
-        font-weight: 700 !important;
-    }
-    
-    /* Dropdown butonu (seçili alan) */
-    div[data-baseweb="select"] {
-        background-color: #222222 !important;
-        border: 1px solid #444444 !important;
-        border-radius: 10px !important;
-        color: white !important;
-    }
-    div[data-baseweb="select"] div {
-        color: white !important;
-    }
-
-    /* BUTON */
     .stButton > button {
         background: linear-gradient(135deg, #f5a623, #e69500) !important;
         color: #1a1a1a !important;
@@ -171,7 +118,7 @@ LEAGUE_CODES = {
     "Sırbistan SuperLiga": "SRB", "Çek Cumhuriyeti 1. Liga": "CZE",
     "Romanya Liga 1": "ROU", "Macaristan NB I": "HUN",
     "Bulgaristan 1. Liga": "BUL", "Slovakya Super Liga": "SVK",
-    "Slovenya PrvaLiga": "SVN", "İrlanda Premier Division": "IRL",
+    "Slovenja PrvaLiga": "SVN", "İrlanda Premier Division": "IRL",
     "Şampiyonlar Ligi": "CL", "Avrupa Ligi": "EL", "Konferans Ligi": "ECL",
     "Dünya Kupası": "WC", "Avrupa Şampiyonası": "EC",
     "Copa America": "CAM", "Afrika Kupası": "AFC", "Asya Kupası": "ASC",
@@ -295,9 +242,16 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    # ===== LİG/TURNUVA SEÇİMİ =====
+    # ===== LİG/TURNUVA SEÇİMİ (select_slider ile) =====
     st.markdown("### 🏆 Lig / Turnuva Seç")
-    selected_league = st.selectbox("🏆 Lig veya Turnuva Seçin:", ALL_LEAGUES, key="league_select_home")
+    # select_slider ile listeyi göster
+    selected_index = st.select_slider(
+        "🏆 Lig veya Turnuva Seçin:",
+        options=range(len(ALL_LEAGUES)),
+        format_func=lambda i: ALL_LEAGUES[i],
+        value=0
+    )
+    selected_league = ALL_LEAGUES[selected_index]
 
     if st.button("🚀 Maçları Getir ve Analiz Et", use_container_width=True):
         st.session_state['selected_league'] = selected_league
