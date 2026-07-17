@@ -23,7 +23,6 @@ st.markdown("""
     h1, h2, h3, h4, p, div, span, label {
         color: white !important;
     }
-    /* Radio buton listesini kaydırmalı yap */
     div[data-testid="stRadio"] {
         max-height: 400px;
         overflow-y: auto;
@@ -267,10 +266,9 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    # ===== LİG/TURNUVA SEÇİMİ (Radio buton, kaydırmalı) =====
+    # ===== LİG/TURNUVA SEÇİMİ (Radio buton) =====
     st.markdown("### 🏆 Lig / Turnuva Seç")
     
-    # Radio buton ile listele (kaydırmalı)
     selected_league = st.radio(
         "Lig veya Turnuva Seçin:",
         ALL_LEAGUES,
@@ -306,21 +304,43 @@ else:
     league_name = st.session_state['selected_league']
     st.markdown(f"### 🏆 {league_name} - Maç Listesi")
 
-    # ===== MAÇLARI LİSTELE =====
+    # ===== MAÇLARI LİSTELE (GERÇEK VERİ) =====
     league_code = LEAGUE_CODES.get(league_name, None)
-    ss_id = SS_LEAGUES.get(league_name, None)
-
     matches_list = []
+
     if league_code:
-        table = get_league_table(league_code)
-        matches_list = [
-            {"home": "Liverpool", "away": "Manchester City", "date": "2026-07-18", "time": "19:30"},
-            {"home": "Arsenal", "away": "Chelsea", "date": "2026-07-18", "time": "22:00"},
-            {"home": "Tottenham", "away": "Aston Villa", "date": "2026-07-18", "time": "17:00"},
-        ]
+        # Football-Data.org'dan çek
+        matches = get_league_matches(league_code, season="2025")
+        if matches:
+            # Maçları formatla
+            for m in matches:
+                home = m.get("homeTeam", {}).get("name", "?")
+                away = m.get("awayTeam", {}).get("name", "?")
+                date = m.get("utcDate", "Tarih yok")[:10]
+                time = m.get("utcDate", "00:00")[11:16]
+                matches_list.append({"home": home, "away": away, "date": date, "time": time})
+    
+    # Eğer Football-Data.org boş geldiyse, sports-skills dene
+    if not matches_list:
+        ss_id = SS_LEAGUES.get(league_name, None)
+        if ss_id:
+            from sports_skills import football
+            try:
+                season_id = f"{ss_id}-2025"
+                result = football.get_season_fixtures(season_id=season_id)
+                if result and "data" in result:
+                    fixtures = result["data"].get("fixtures", [])
+                    for f in fixtures[:20]:  # max 20 maç
+                        home = f.get("home_team", "?")
+                        away = f.get("away_team", "?")
+                        date = f.get("date", "Tarih yok")[:10]
+                        time = f.get("time", "00:00")
+                        matches_list.append({"home": home, "away": away, "date": date, "time": time})
+            except:
+                pass
 
     if not matches_list:
-        st.info("📢 Bu lig için bugün veya önümüzdeki günlerde maç bulunamadı.")
+        st.info("📢 Bu lig için maç bulunamadı. Sezon başlamamış olabilir.")
     else:
         for m in matches_list:
             col1, col2, col3 = st.columns([3, 1, 1])
