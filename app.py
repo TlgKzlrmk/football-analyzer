@@ -14,66 +14,38 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== KOYU TEMA + DROPDOWN KESİN ÇÖZÜM ====================
+# ==================== KOYU TEMA + RADYO KAYDIRMA ====================
 st.markdown("""
 <style>
-    /* Ana arka plan */
     .stApp {
         background-color: #1a1a1a !important;
     }
     h1, h2, h3, h4, p, div, span, label {
         color: white !important;
     }
-    
-    /* ===== DROPDOWN - KESİN ÇÖZÜM ===== */
-    /* Dropdown butonu (seçili alan) */
-    div[data-baseweb="select"] {
-        background-color: #2a2a2a !important;
-        border: 1px solid #444444 !important;
+    /* Radio buton listesini kaydırmalı yap */
+    div[data-testid="stRadio"] {
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: #222222 !important;
+        padding: 10px !important;
         border-radius: 10px !important;
-        color: white !important;
-    }
-    div[data-baseweb="select"] div {
-        color: white !important;
-    }
-    
-    /* Dropdown açılan liste (popover) */
-    div[data-baseweb="popover"] {
-        background-color: #2a2a2a !important;
         border: 1px solid #444444 !important;
-        border-radius: 10px !important;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.9) !important;
     }
-    div[data-baseweb="popover"] ul,
-    div[data-baseweb="popover"] div[role="listbox"] {
-        background-color: #2a2a2a !important;
+    div[data-testid="stRadio"] label {
         color: white !important;
-        padding: 4px 0 !important;
+        padding: 6px 12px !important;
+        border-radius: 6px !important;
+        transition: background 0.2s;
     }
-    /* Liste elemanları */
-    div[data-baseweb="popover"] li,
-    div[data-baseweb="popover"] div[role="option"] {
-        background-color: #2a2a2a !important;
-        color: white !important;
-        padding: 10px 16px !important;
-        border-bottom: 1px solid #3a3a3a !important;
-        font-size: 16px !important;
-    }
-    /* Hover */
-    div[data-baseweb="popover"] li:hover,
-    div[data-baseweb="popover"] div[role="option"]:hover {
+    div[data-testid="stRadio"] label:hover {
         background-color: #3a3a3a !important;
-        color: white !important;
     }
-    /* Seçili eleman */
-    div[data-baseweb="popover"] li[aria-selected="true"],
-    div[data-baseweb="popover"] div[role="option"][aria-selected="true"] {
+    div[data-testid="stRadio"] label[data-checked="true"] {
         background-color: #f5a623 !important;
         color: #1a1a1a !important;
         font-weight: 700 !important;
     }
-
-    /* BUTON */
     .stButton > button {
         background: linear-gradient(135deg, #f5a623, #e69500) !important;
         color: #1a1a1a !important;
@@ -207,6 +179,8 @@ if 'selected_match' not in st.session_state:
     st.session_state['selected_match'] = None
 if 'match_id' not in st.session_state:
     st.session_state['match_id'] = None
+if 'selected_league' not in st.session_state:
+    st.session_state['selected_league'] = ALL_LEAGUES[0] if ALL_LEAGUES else "Premier League"
 
 # ==================== KARŞILAMA EKRANI ====================
 if st.session_state['page'] == 'home':
@@ -293,12 +267,20 @@ if st.session_state['page'] == 'home':
 
     st.divider()
 
-    # ===== LİG/TURNUVA SEÇİMİ (Dropdown) =====
+    # ===== LİG/TURNUVA SEÇİMİ (Radio buton, kaydırmalı) =====
     st.markdown("### 🏆 Lig / Turnuva Seç")
-    selected_league = st.selectbox("🏆 Lig veya Turnuva Seçin:", ALL_LEAGUES, key="league_select_home")
+    
+    # Radio buton ile listele (kaydırmalı)
+    selected_league = st.radio(
+        "Lig veya Turnuva Seçin:",
+        ALL_LEAGUES,
+        index=ALL_LEAGUES.index(st.session_state['selected_league']) if st.session_state['selected_league'] in ALL_LEAGUES else 0,
+        key="league_radio",
+        label_visibility="collapsed"
+    )
+    st.session_state['selected_league'] = selected_league
 
     if st.button("🚀 Maçları Getir ve Analiz Et", use_container_width=True):
-        st.session_state['selected_league'] = selected_league
         st.session_state['page'] = 'analysis'
         st.rerun()
 
@@ -320,9 +302,6 @@ else:
         st.rerun()
 
     st.divider()
-
-    if 'selected_league' not in st.session_state:
-        st.session_state['selected_league'] = "Premier League"
 
     league_name = st.session_state['selected_league']
     st.markdown(f"### 🏆 {league_name} - Maç Listesi")
