@@ -14,15 +14,68 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== KOYU TEMA CSS (FOTOĞRAFSIZ) ====================
+# ==================== KOYU TEMA (ARKA PLAN AÇIK) + DROPDOWN KESİN ÇÖZÜM ====================
 st.markdown("""
 <style>
+    /* Ana arka plan */
     .stApp {
-        background-color: #0a0a0a;
+        background-color: #1a1a1a !important;
     }
+    /* Tüm yazılar beyaz */
     h1, h2, h3, h4, p, div, span, label {
         color: white !important;
     }
+    
+    /* ===== DROPDOWN - KESİN ÇÖZÜM (TÜM POPOVER'LAR) ===== */
+    /* Popover arka planı */
+    div[data-baseweb="popover"] {
+        background-color: #222222 !important;
+        border: 1px solid #444444 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.8) !important;
+    }
+    /* Popover içindeki liste */
+    div[data-baseweb="popover"] ul,
+    div[data-baseweb="popover"] div[role="listbox"] {
+        background-color: #222222 !important;
+        color: white !important;
+        padding: 4px 0 !important;
+    }
+    /* Liste elemanları */
+    div[data-baseweb="popover"] li,
+    div[data-baseweb="popover"] div[role="option"] {
+        background-color: #222222 !important;
+        color: white !important;
+        padding: 10px 16px !important;
+        border-bottom: 1px solid #333333 !important;
+        font-size: 16px !important;
+    }
+    /* Hover */
+    div[data-baseweb="popover"] li:hover,
+    div[data-baseweb="popover"] div[role="option"]:hover {
+        background-color: #3a3a3a !important;
+        color: white !important;
+    }
+    /* Seçili eleman */
+    div[data-baseweb="popover"] li[aria-selected="true"],
+    div[data-baseweb="popover"] div[role="option"][aria-selected="true"] {
+        background-color: #f5a623 !important;
+        color: #1a1a1a !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Dropdown butonu (seçili alan) */
+    div[data-baseweb="select"] {
+        background-color: #222222 !important;
+        border: 1px solid #444444 !important;
+        border-radius: 10px !important;
+        color: white !important;
+    }
+    div[data-baseweb="select"] div {
+        color: white !important;
+    }
+
+    /* BUTON */
     .stButton > button {
         background: linear-gradient(135deg, #f5a623, #e69500) !important;
         color: #1a1a1a !important;
@@ -33,7 +86,6 @@ st.markdown("""
         font-size: 17px !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3) !important;
-        letter-spacing: 0.5px !important;
     }
     .stButton > button:hover {
         transform: scale(1.05) !important;
@@ -43,7 +95,6 @@ st.markdown("""
     .eagle-card {
         background: rgba(255, 255, 255, 0.06) !important;
         backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
         border-radius: 20px !important;
         padding: 25px !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -55,12 +106,10 @@ st.markdown("""
         transform: translateY(-8px) !important;
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: #f5a623 !important;
-        box-shadow: 0 12px 48px rgba(245, 166, 35, 0.15) !important;
     }
     .match-card {
         background: rgba(0, 0, 0, 0.45) !important;
         backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
         border-radius: 16px !important;
         padding: 16px 24px !important;
         border-left: 5px solid #f5a623 !important;
@@ -75,7 +124,6 @@ st.markdown("""
     .league-card {
         background: rgba(0, 0, 0, 0.35) !important;
         backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
         border-radius: 16px !important;
         padding: 18px !important;
         border: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -108,7 +156,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== GLOBAL DEĞİŞKENLER (TÜM EKRANLAR İÇİN) ====================
+# ==================== GLOBAL DEĞİŞKENLER ====================
 LEAGUE_CODES = {
     "Premier League": "PL", "La Liga": "PD", "Bundesliga": "BL1",
     "Serie A": "SA", "Ligue 1": "FL1", "Championship": "ELC",
@@ -148,7 +196,7 @@ SS_LEAGUES = {
     "Hırvatistan HNL": "croatian-hnl", "Sırbistan SuperLiga": "serbian-superliga",
     "Çek Cumhuriyeti 1. Liga": "czech-1-liga", "Romanya Liga 1": "romanian-liga-1",
     "Macaristan NB I": "hungarian-nb-i", "Bulgaristan 1. Liga": "bulgarian-1-liga",
-    "Slovakya Super Liga": "slovak-super-liga", "Slovenya PrvaLiga": "slovenian-prvaliga",
+    "Slovakya Super Liga": "slovak-super-liga", "Slovenja PrvaLiga": "slovenian-prvaliga",
     "İrlanda Premier Division": "irish-premier-division",
 }
 
@@ -288,7 +336,6 @@ else:
     matches_list = []
     if league_code:
         table = get_league_table(league_code)
-        # Maç listesi için örnek veri (gerçekte API'den çekilecek)
         matches_list = [
             {"home": "Liverpool", "away": "Manchester City", "date": "2026-07-18", "time": "19:30"},
             {"home": "Arsenal", "away": "Chelsea", "date": "2026-07-18", "time": "22:00"},
@@ -341,7 +388,6 @@ else:
                             "Avans": r["goalDifference"]
                         } for r in rows])
                         
-                        # Renkli satırlar
                         def row_color(row):
                             if row["Sıra"] == 1:
                                 return "champion-row"
@@ -352,18 +398,14 @@ else:
                             return ""
                         
                         df["row_class"] = df.apply(row_color, axis=1)
-                        
-                        # Tabloyu göster
                         st.dataframe(df[["Sıra", "Takım", "O", "G", "B", "M", "A", "Y", "Avans", "Puan"]],
-                                     use_container_width=True,
-                                     hide_index=True)
+                                     use_container_width=True, hide_index=True)
                     else:
                         st.warning("Puan durumu verisi bulunamadı.")
                 else:
                     st.warning("Puan durumu verisi boş.")
             else:
                 st.warning("⚠️ 2026/2027 sezonu henüz başlamamış olabilir. Geçmiş sezon verileri gösteriliyor.")
-                # Yedek olarak sports-skills dene
                 if ss_id:
                     ss_data = get_ss_standings(f"{ss_id}-2025")
                     if ss_data and "standings" in ss_data:
