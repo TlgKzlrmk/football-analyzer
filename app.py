@@ -14,79 +14,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-bg_image_url = "https://www.istanbul.com.tr/images/places/vodafone-park-2.jpg"
-
-st.markdown(f"""
+# ==================== KOYU TEMA CSS (FOTOĞRAFSIZ) ====================
+st.markdown("""
 <style>
-    .stApp {{
-        background-image: url("{bg_image_url}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }}
-    .stApp::before {{
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.78);
-        z-index: 0;
-    }}
-    .stApp > div {{
-        position: relative;
-        z-index: 1;
-    }}
-    h1, h2, h3, h4, p, div, span, label {{
+    .stApp {
+        background-color: #0a0a0a;
+    }
+    h1, h2, h3, h4, p, div, span, label {
         color: white !important;
-    }}
-    div[data-testid="stSelectbox"] {{
-        background-color: transparent !important;
-    }}
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background-color: #1a1a1a !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
-        border-radius: 10px !important;
-        color: white !important;
-    }}
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-        color: white !important;
-    }}
-    div[data-testid="stSelectbox"] ul,
-    div[data-testid="stSelectbox"] div[role="listbox"],
-    div[data-baseweb="popover"] ul,
-    div[data-baseweb="popover"] div[role="listbox"] {{
-        background-color: #1a1a1a !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 10px !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.8) !important;
-    }}
-    div[data-testid="stSelectbox"] ul li,
-    div[data-testid="stSelectbox"] div[role="listbox"] li,
-    div[data-baseweb="popover"] ul li,
-    div[data-baseweb="popover"] div[role="listbox"] li {{
-        color: white !important;
-        background-color: #1a1a1a !important;
-        padding: 10px 16px !important;
-        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-    }}
-    div[data-testid="stSelectbox"] ul li:hover,
-    div[data-testid="stSelectbox"] div[role="listbox"] li:hover,
-    div[data-baseweb="popover"] ul li:hover,
-    div[data-baseweb="popover"] div[role="listbox"] li:hover {{
-        background-color: #333333 !important;
-        color: white !important;
-    }}
-    div[data-testid="stSelectbox"] ul li[aria-selected="true"],
-    div[data-testid="stSelectbox"] div[role="listbox"] li[aria-selected="true"],
-    div[data-baseweb="popover"] ul li[aria-selected="true"],
-    div[data-baseweb="popover"] div[role="listbox"] li[aria-selected="true"] {{
-        background-color: #f5a623 !important;
-        color: #1a1a1a !important;
-        font-weight: 700 !important;
-    }}
-    .stButton > button {{
+    }
+    .stButton > button {
         background: linear-gradient(135deg, #f5a623, #e69500) !important;
         color: #1a1a1a !important;
         border: none !important;
@@ -97,13 +34,13 @@ st.markdown(f"""
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3) !important;
         letter-spacing: 0.5px !important;
-    }}
-    .stButton > button:hover {{
+    }
+    .stButton > button:hover {
         transform: scale(1.05) !important;
         background: linear-gradient(135deg, #ffb347, #f5a623) !important;
         box-shadow: 0 6px 30px rgba(245, 166, 35, 0.5) !important;
-    }}
-    .eagle-card {{
+    }
+    .eagle-card {
         background: rgba(255, 255, 255, 0.06) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
@@ -113,14 +50,14 @@ st.markdown(f"""
         text-align: center !important;
         transition: all 0.4s ease !important;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
-    }}
-    .eagle-card:hover {{
+    }
+    .eagle-card:hover {
         transform: translateY(-8px) !important;
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: #f5a623 !important;
         box-shadow: 0 12px 48px rgba(245, 166, 35, 0.15) !important;
-    }}
-    .match-card {{
+    }
+    .match-card {
         background: rgba(0, 0, 0, 0.45) !important;
         backdrop-filter: blur(8px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
@@ -130,12 +67,12 @@ st.markdown(f"""
         margin-bottom: 12px !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
-    }}
-    .match-card:hover {{
+    }
+    .match-card:hover {
         transform: scale(1.01) !important;
         background: rgba(0, 0, 0, 0.6) !important;
-    }}
-    .league-card {{
+    }
+    .league-card {
         background: rgba(0, 0, 0, 0.35) !important;
         backdrop-filter: blur(8px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
@@ -143,31 +80,31 @@ st.markdown(f"""
         padding: 18px !important;
         border: 1px solid rgba(255, 255, 255, 0.06) !important;
         transition: all 0.3s ease !important;
-    }}
-    .league-card:hover {{
+    }
+    .league-card:hover {
         background: rgba(0, 0, 0, 0.5) !important;
         border-color: #f5a623 !important;
-    }}
-    .champion-row {{
+    }
+    .champion-row {
         background-color: rgba(255, 215, 0, 0.15) !important;
         border-left: 4px solid #ffd700 !important;
-    }}
-    .europe-row {{
+    }
+    .europe-row {
         background-color: rgba(0, 200, 100, 0.10) !important;
         border-left: 4px solid #00c864 !important;
-    }}
-    .relegation-row {{
+    }
+    .relegation-row {
         background-color: rgba(255, 0, 0, 0.10) !important;
         border-left: 4px solid #ff0000 !important;
-    }}
-    .prediction-card {{
+    }
+    .prediction-card {
         background: rgba(255, 255, 255, 0.05) !important;
         backdrop-filter: blur(10px) !important;
         border-radius: 16px !important;
         padding: 20px !important;
         border: 1px solid rgba(255, 255, 255, 0.06) !important;
         text-align: center !important;
-    }}
+    }
 </style>
 """, unsafe_allow_html=True)
 
